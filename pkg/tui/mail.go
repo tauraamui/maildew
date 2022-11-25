@@ -20,7 +20,10 @@ type Model struct {
 
 // InitProject initialize the mailui model for your program
 func InitMail() tea.Model {
-	m := Model{mode: auth}
+	m := Model{
+		mode: auth,
+		auth: newAuthModel(),
+	}
 	return m
 }
 
@@ -39,6 +42,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	}
+
+	if m.mode == auth {
+		return m.auth.Update(msg)
+	}
+
+	return nil, nil
 }
 
 // View return the text UI to be output to the terminal
@@ -52,5 +61,5 @@ func (m Model) View() string {
 		m.auth.View()
 	}
 
-	return "Auth"
+	return "Nothing"
 }
