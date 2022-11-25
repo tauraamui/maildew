@@ -14,6 +14,7 @@ const (
 // Model the entryui model definition
 type Model struct {
 	mode     mode
+	auth     tea.Model
 	quitting bool
 }
 
@@ -30,13 +31,25 @@ func (m Model) Init() tea.Cmd {
 
 // Update handle IO and commands
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	return m, nil
+	// Make sure these keys always quit
+	if msg, ok := msg.(tea.KeyMsg); ok {
+		k := msg.String()
+		if k == "q" || k == "esc" || k == "ctrl+c" {
+			m.quitting = true
+			return m, tea.Quit
+		}
+	}
 }
 
 // View return the text UI to be output to the terminal
 func (m Model) View() string {
 	if m.quitting {
 		return ""
+	}
+
+	switch m.mode {
+	case auth:
+		m.auth.View()
 	}
 
 	return "Auth"
