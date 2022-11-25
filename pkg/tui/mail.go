@@ -40,15 +40,6 @@ func (m Model) Init() tea.Cmd {
 
 // Update handle IO and commands
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	// Make sure these keys always quit
-	if msg, ok := msg.(tea.KeyMsg); ok {
-		k := msg.String()
-		if k == "q" || k == "esc" || k == "ctrl+c" {
-			m.quitting = true
-			return m, tea.Quit
-		}
-	}
-
 	switch msg.(type) {
 	case authenticateUserMsg:
 		m.mode = list
