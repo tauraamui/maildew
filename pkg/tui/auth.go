@@ -11,6 +11,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/tauraamui/maildew/pkg/tui/constants"
 )
 
 var (
@@ -21,8 +22,11 @@ var (
 	helpStyle           = blurredStyle.Copy()
 	cursorModeHelpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
 
-	focusedButton = focusedStyle.Copy().Render("[ Submit ]")
-	blurredButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
+	focusedButton  = focusedStyle.Copy().Render("[ Submit ]")
+	blurredButton  = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
+	dialogBoxStyle = lipgloss.NewStyle().Border(lipgloss.RoundedBorder(), true, true, true, true).
+			BorderForeground(lipgloss.Color("#874BFD")).
+			Padding(1, 0)
 )
 
 type authmodel struct {
@@ -60,12 +64,6 @@ func newAuthModel() authmodel {
 
 		m.inputs[i] = t
 	}
-
-	m.viewport = viewport.New(200, 10)
-	m.viewport.Style = lipgloss.NewStyle().
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("62")).
-		PaddingRight(2)
 
 	return m
 }
@@ -179,7 +177,10 @@ func (m authmodel) View() string {
 	b.WriteString(cursorModeHelpStyle.Render(m.cursorMode.String()))
 	b.WriteString(helpStyle.Render(" (ctrl+r to change style)"))
 
-	m.viewport.SetContent(b.String())
+	ui := lipgloss.JoinVertical(lipgloss.Center, b.String())
+	dialog := lipgloss.Place(constants.WindowSize.Width, constants.WindowSize.Height,
+		lipgloss.Center, lipgloss.Center, dialogBoxStyle.Render(ui),
+	)
 
-	return m.viewport.View()
+	return dialog
 }

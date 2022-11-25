@@ -2,6 +2,7 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/tauraamui/maildew/pkg/tui/constants"
 )
 
 type mode int
@@ -40,7 +41,9 @@ func (m Model) Init() tea.Cmd {
 
 // Update handle IO and commands
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg.(type) {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		constants.WindowSize = msg
 	case authenticateUserMsg:
 		m.mode = list
 	}
