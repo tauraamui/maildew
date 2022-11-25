@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -26,11 +27,10 @@ var (
 
 type authmodel struct {
 	focusIndex int
+	viewport   viewport.Model
 	inputs     []textinput.Model
 	cursorMode textinput.CursorMode
 }
-
-type credCallback func(name, email, password string)
 
 func newAuthModel() authmodel {
 	m := authmodel{
@@ -61,6 +61,12 @@ func newAuthModel() authmodel {
 		m.inputs[i] = t
 	}
 
+	m.viewport = viewport.New(200, 10)
+	m.viewport.Style = lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("62")).
+		PaddingRight(2)
+
 	return m
 }
 
@@ -69,7 +75,11 @@ func (m authmodel) Init() tea.Cmd {
 }
 
 func (m authmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmds []tea.Cmd
+
+	var vpCmd tea.Cmd
+	m.viewport, vpCmd = m.viewport.Update(msg)
+
+	cmds := []tea.Cmd{vpCmd}
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -169,5 +179,7 @@ func (m authmodel) View() string {
 	b.WriteString(cursorModeHelpStyle.Render(m.cursorMode.String()))
 	b.WriteString(helpStyle.Render(" (ctrl+r to change style)"))
 
-	return b.String()
+	m.viewport.SetContent(b.String())
+
+	return m.viewport.View()
 }
