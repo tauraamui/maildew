@@ -11,7 +11,7 @@ import (
 
 // StartTea the entry point for the UI. Initializes the model.
 func StartTea() {
-	if f, err := tea.LogToFile("debug.log", "help"); err != nil {
+	if f, err := tea.LogToFile("debug.log", "debug"); err != nil {
 		fmt.Println("Couldn't open a file for logging:", err)
 		os.Exit(1)
 	} else {

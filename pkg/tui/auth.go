@@ -30,6 +30,8 @@ type authmodel struct {
 	cursorMode textinput.CursorMode
 }
 
+type credCallback func(name, email, password string)
+
 func newAuthModel() authmodel {
 	m := authmodel{
 		inputs: make([]textinput.Model, 3),
@@ -67,6 +69,7 @@ func (m authmodel) Init() tea.Cmd {
 }
 
 func (m authmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -92,7 +95,7 @@ func (m authmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Did the user press enter while the submit button was focused?
 			// If so, exit.
 			if s == "enter" && m.focusIndex == len(m.inputs) {
-				return m, tea.Quit
+				cmds = append(cmds, authenticateCmd(m.inputs[0].Value(), m.inputs[1].Value(), m.inputs[2].Value()))
 			}
 
 			// Cycle indexes
@@ -108,11 +111,11 @@ func (m authmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.focusIndex = len(m.inputs)
 			}
 
-			cmds := make([]tea.Cmd, len(m.inputs))
+			inputCmds := make([]tea.Cmd, len(m.inputs))
 			for i := 0; i <= len(m.inputs)-1; i++ {
 				if i == m.focusIndex {
 					// Set focused state
-					cmds[i] = m.inputs[i].Focus()
+					inputCmds[i] = m.inputs[i].Focus()
 					m.inputs[i].PromptStyle = focusedStyle
 					m.inputs[i].TextStyle = focusedStyle
 					continue
@@ -122,6 +125,7 @@ func (m authmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.inputs[i].PromptStyle = noStyle
 				m.inputs[i].TextStyle = noStyle
 			}
+			cmds = append(cmds, inputCmds...)
 
 			return m, tea.Batch(cmds...)
 		}

@@ -11,10 +11,15 @@ const (
 	list
 )
 
+type (
+	authenticateUserMsg struct{}
+)
+
 // Model the entryui model definition
 type Model struct {
 	mode     mode
 	auth     tea.Model
+	list     tea.Model
 	quitting bool
 }
 
@@ -23,6 +28,7 @@ func InitMail() tea.Model {
 	m := Model{
 		mode: auth,
 		auth: newAuthModel(),
+		list: newListModel(),
 	}
 	return m
 }
@@ -43,11 +49,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	if m.mode == auth {
-		return m.auth.Update(msg)
+	switch msg.(type) {
+	case authenticateUserMsg:
+		m.mode = list
 	}
 
-	return nil, nil
+	var cmd tea.Cmd
+	switch m.mode {
+	case auth:
+		m.auth, cmd = m.auth.Update(msg)
+		return m, cmd
+	case list:
+		m.list, cmd = m.list.Update(msg)
+		return m, cmd
+	}
+
+	return m, nil
 }
 
 // View return the text UI to be output to the terminal
@@ -58,7 +75,9 @@ func (m Model) View() string {
 
 	switch m.mode {
 	case auth:
-		m.auth.View()
+		return m.auth.View()
+	case list:
+		return m.list.View()
 	}
 
 	return "Nothing"
