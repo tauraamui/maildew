@@ -9,27 +9,30 @@ type mode int
 
 const (
 	auth mode = iota
+	createAccount
 	list
 )
 
 type (
+	createAccountMsg    struct{}
 	authenticateUserMsg struct{}
 )
 
 // Model the entryui model definition
 type Model struct {
-	mode     mode
-	auth     tea.Model
-	list     tea.Model
-	quitting bool
+	mode          mode
+	createAccount tea.Model
+	auth          tea.Model
+	list          tea.Model
+	quitting      bool
 }
 
 // InitProject initialize the mailui model for your program
 func InitMail() tea.Model {
 	m := Model{
-		mode: auth,
-		auth: newAuthModel(),
-		list: newListModel(),
+		mode:          createAccount,
+		createAccount: newCreateAccountModel(),
+		list:          newListModel(),
 	}
 	return m
 }
@@ -46,12 +49,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		constants.WindowSize = msg
 	case authenticateUserMsg:
 		m.mode = list
+	case createAccountMsg:
+		m.mode = list
 	}
 
 	var cmd tea.Cmd
 	switch m.mode {
-	case auth:
-		m.auth, cmd = m.auth.Update(msg)
+	case createAccount:
+		m.createAccount, cmd = m.createAccount.Update(msg)
 		return m, cmd
 	case list:
 		m.list, cmd = m.list.Update(msg)
@@ -68,8 +73,8 @@ func (m Model) View() string {
 	}
 
 	switch m.mode {
-	case auth:
-		return m.auth.View()
+	case createAccount:
+		return m.createAccount.View()
 	case list:
 		return m.list.View()
 	}
