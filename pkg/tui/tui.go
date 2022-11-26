@@ -6,11 +6,12 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/tauraamui/maildew/pkg/account"
 	"github.com/tauraamui/maildew/pkg/tui/constants"
 )
 
 // StartTea the entry point for the UI. Initializes the model.
-func StartTea() {
+func StartTea(ar account.Repository) {
 	if f, err := tea.LogToFile("debug.log", "debug"); err != nil {
 		fmt.Println("Couldn't open a file for logging:", err)
 		os.Exit(1)
@@ -23,7 +24,9 @@ func StartTea() {
 		}()
 	}
 
-	m := InitMail()
+	constants.Ar = ar
+
+	m := InitMail(constants.Ar)
 	constants.P = tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := constants.P.Run(); err != nil {
 		fmt.Println("Error running program:", err)

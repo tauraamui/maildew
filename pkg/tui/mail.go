@@ -2,6 +2,7 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/tauraamui/maildew/pkg/account"
 	"github.com/tauraamui/maildew/pkg/tui/constants"
 )
 
@@ -20,6 +21,7 @@ type (
 
 // Model the entryui model definition
 type Model struct {
+	ar            account.Repository
 	mode          mode
 	createAccount tea.Model
 	auth          tea.Model
@@ -28,22 +30,27 @@ type Model struct {
 }
 
 // InitProject initialize the mailui model for your program
-func InitMail() tea.Model {
+func InitMail(ar account.Repository) tea.Model {
 	m := Model{
-		mode:          createAccount,
+		ar:            ar,
+		mode:          list,
 		createAccount: newCreateAccountModel(),
 		list:          newListModel(),
 	}
-	return m
+	return &m
 }
 
 // Init run any intial IO on program start
-func (m Model) Init() tea.Cmd {
+func (m *Model) Init() tea.Cmd {
+	accs, _ := m.ar.GetAccounts()
+	if len(accs) == 0 {
+		m.mode = createAccount
+	}
 	return nil
 }
 
 // Update handle IO and commands
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		constants.WindowSize = msg
