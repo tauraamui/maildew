@@ -3,7 +3,6 @@ package tui
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/tauraamui/maildew/pkg/account"
-	"github.com/tauraamui/maildew/pkg/tui/constants"
 )
 
 type mode int
@@ -24,6 +23,7 @@ type Model struct {
 	ar            account.Repository
 	mode          mode
 	createAccount tea.Model
+	windowSize    tea.WindowSizeMsg
 	auth          tea.Model
 	list          tea.Model
 	quitting      bool
@@ -53,7 +53,7 @@ func (m *Model) Init() tea.Cmd {
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		constants.WindowSize = msg
+		m.windowSize = msg
 	case authenticateUserMsg:
 		m.mode = list
 	case createAccountMsg:

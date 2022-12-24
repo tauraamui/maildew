@@ -11,7 +11,6 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/tauraamui/maildew/pkg/tui/constants"
 )
 
 var (
@@ -31,6 +30,7 @@ var (
 
 type createaccountmodel struct {
 	focusIndex int
+	windowSize tea.WindowSizeMsg
 	viewport   viewport.Model
 	inputs     []textinput.Model
 	cursorMode textinput.CursorMode
@@ -137,6 +137,8 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			return m, tea.Batch(cmds...)
 		}
+	case tea.WindowSizeMsg:
+		m.windowSize = msg
 	}
 
 	// Handle character input and blinking
@@ -178,7 +180,7 @@ func (m createaccountmodel) View() string {
 	b.WriteString(helpStyle.Render(" (ctrl+r to change style)"))
 
 	ui := lipgloss.JoinVertical(lipgloss.Center, b.String())
-	dialog := lipgloss.Place(constants.WindowSize.Width, constants.WindowSize.Height,
+	dialog := lipgloss.Place(m.windowSize.Width, m.windowSize.Height,
 		lipgloss.Center, lipgloss.Center, dialogBoxStyle.Render(ui),
 	)
 
