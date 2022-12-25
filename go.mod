@@ -8,6 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
 	github.com/tacusci/logging/v2 v2.1.1
+	github.com/tauraamui/dragondaemon v0.0.0-20220507185219-44abb34d6ae9
 	gorm.io/driver/sqlite v1.4.3
 	gorm.io/gorm v1.24.2
 )
@@ -19,6 +20,7 @@ require (
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
@@ -29,9 +31,14 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.13.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/spf13/afero v1.6.0 // indirect
+	github.com/tauraamui/xerror v0.0.0-20211027201245-7be9e626485f // indirect
 	golang.org/x/crypto v0.4.0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/term v0.3.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
+	gopkg.in/dealancer/validate.v2 v2.1.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
