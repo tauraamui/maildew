@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/tauraamui/maildew/internal/core"
+	"github.com/tauraamui/maildew/internal/config"
 	account "github.com/tauraamui/maildew/internal/storage"
 	"github.com/tauraamui/maildew/internal/tui"
 	"gorm.io/driver/sqlite"
@@ -24,7 +24,7 @@ func openSQLite() *gorm.DB {
 }
 
 func main() {
-	core.ResolveRootKey()
+	config.ResolveRootKey()
 
 	db := openSQLite()
 	ar := account.AccountRepository{DB: db}
