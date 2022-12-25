@@ -4,6 +4,7 @@ package tui
 // from the Bubbles component library.
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -20,6 +21,7 @@ var (
 	noStyle             = lipgloss.NewStyle()
 	helpStyle           = blurredStyle.Copy()
 	cursorModeHelpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
+	errorStyle          = lipgloss.NewStyle().Foreground(lipgloss.Color("160"))
 
 	focusedButton  = focusedStyle.Copy().Render("[ Submit ]")
 	blurredButton  = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
@@ -34,6 +36,7 @@ type createaccountmodel struct {
 	viewport   viewport.Model
 	inputs     []textinput.Model
 	cursorMode textinput.CursorMode
+	err        error
 }
 
 func newCreateAccountModel() createaccountmodel {
@@ -103,6 +106,7 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Did the user press enter while the submit button was focused?
 			// If so, exit.
 			if s == "enter" && m.focusIndex == len(m.inputs) {
+				m.err = nil
 				cmds = append(cmds, createAccountCmd(m.inputs[0].Value(), m.inputs[1].Value(), m.inputs[2].Value()))
 			}
 
@@ -139,6 +143,8 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
+	case createAccountMsg:
+		m.err = errors.New("creating accounts is not yet supported")
 	}
 
 	// Handle character input and blinking
@@ -178,6 +184,11 @@ func (m createaccountmodel) View() string {
 	b.WriteString(helpStyle.Render("cursor mode is "))
 	b.WriteString(cursorModeHelpStyle.Render(m.cursorMode.String()))
 	b.WriteString(helpStyle.Render(" (ctrl+r to change style)"))
+	if m.err != nil {
+		b.WriteRune('\n')
+		b.WriteRune('\n')
+		b.WriteString(errorStyle.Render(fmt.Sprintf("%s...", m.err.Error())))
+	}
 
 	ui := lipgloss.JoinVertical(lipgloss.Center, b.String())
 	dialog := lipgloss.Place(m.windowSize.Width, m.windowSize.Height,
