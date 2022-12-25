@@ -1,4 +1,4 @@
-package account
+package core
 
 import (
 	"os"
@@ -6,7 +6,7 @@ import (
 	"github.com/gtank/cryptopasta"
 )
 
-func SetupLocal() {
+func ResolveRootKey() {
 	key := cryptopasta.NewEncryptionKey()
 	os.WriteFile(".mailkey", key[:], os.ModePerm)
 }

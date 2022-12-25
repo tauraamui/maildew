@@ -3,7 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/tauraamui/maildew/internal/account"
+	"github.com/tauraamui/maildew/internal/core"
+	account "github.com/tauraamui/maildew/internal/storage"
 	"github.com/tauraamui/maildew/internal/tui"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -23,7 +24,8 @@ func openSQLite() *gorm.DB {
 }
 
 func main() {
-	account.SetupLocal()
+	core.ResolveRootKey()
+
 	db := openSQLite()
 	ar := account.AccountRepository{DB: db}
 	tui.StartTea(ar)

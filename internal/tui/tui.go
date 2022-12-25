@@ -6,7 +6,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/tauraamui/maildew/internal/account"
+	account "github.com/tauraamui/maildew/internal/storage"
 )
 
 // StartTea the entry point for the UI. Initializes the model.

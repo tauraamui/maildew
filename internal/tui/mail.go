@@ -2,7 +2,7 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/tauraamui/maildew/internal/account"
+	account "github.com/tauraamui/maildew/internal/storage"
 )
 
 type mode int
