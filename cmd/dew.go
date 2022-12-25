@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/tauraamui/maildew/pkg/account"
-	"github.com/tauraamui/maildew/pkg/tui"
+	"github.com/tauraamui/maildew/internal/account"
+	"github.com/tauraamui/maildew/internal/tui"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

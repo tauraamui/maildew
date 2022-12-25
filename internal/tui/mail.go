@@ -2,7 +2,7 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/tauraamui/maildew/pkg/account"
+	"github.com/tauraamui/maildew/internal/account"
 )
 
 type mode int
@@ -14,7 +14,9 @@ const (
 )
 
 type (
-	createAccountMsg    struct{}
+	createAccountMsg struct {
+		nick, email, password string
+	}
 	authenticateUserMsg struct{}
 )
 
@@ -55,8 +57,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
 	case authenticateUserMsg:
-		m.mode = list
-	case createAccountMsg:
 		m.mode = list
 	}
 
