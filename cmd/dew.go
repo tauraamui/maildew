@@ -23,6 +23,7 @@ func openSQLite() *gorm.DB {
 }
 
 func main() {
+	account.SetupLocal()
 	db := openSQLite()
 	ar := account.AccountRepository{DB: db}
 	tui.StartTea(ar)
