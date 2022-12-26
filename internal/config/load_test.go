@@ -93,23 +93,6 @@ func (suite *LoadConfigTestSuite) TestLoadConfigErrorOnResolvingUserConfigDir() 
 	)
 }
 
-func (suite *LoadConfigTestSuite) TestConfigLoadFailsValidationOnDupCameraTitles() {
-	suite.overwriteTestConfig(
-		`{"cameras": [
-			{"title": "FakeCam1"},
-			{"title": "FakeCam2"},
-			{"title": "FakeCam3"},
-			{"title": "FakeCam4"},
-			{"title": "FakeCam3"}
-		]}`,
-	)
-
-	config, err := suite.configResolver.Resolve()
-	suite.is.True(err != nil)
-	suite.is.Equal(config, configdef.Values{})
-	suite.is.Equal(err.Error(), "validation failed: camera titles must be unique")
-}
-
 func TestLoadConfigTestSuite(t *testing.T) {
 	suite.Run(t, &LoadConfigTestSuite{})
 }
