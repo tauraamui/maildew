@@ -5,8 +5,8 @@ import (
 )
 
 type Values struct {
-	Debug   bool     `json:"debug"`
-	RootKey [32]byte `json:"root_key"`
+	Debug   bool      `json:"debug"`
+	RootKey *[32]byte `json:"root_key"`
 }
 
 func (v Values) RunValidate() error {

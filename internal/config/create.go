@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gtank/cryptopasta"
 	"github.com/tauraamui/maildew/internal/log"
 	"github.com/tauraamui/xerror"
 
@@ -56,7 +57,9 @@ func writeConfigToDisk(data []byte, path string, overwrite bool) error {
 }
 
 func loadRawDefaultConfig() ([]byte, error) {
-	return json.MarshalIndent(configdef.Values{}, "", " ")
+	return json.MarshalIndent(configdef.Values{
+		cryptopasta.NewEncryptionKey(),
+	}, "", " ")
 }
 
 func mustResolveConfigPath() string {
