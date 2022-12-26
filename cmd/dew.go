@@ -4,8 +4,8 @@ import (
 	"errors"
 	"log"
 
-	"github.com/tauraamui/dragondaemon/pkg/config"
-	"github.com/tauraamui/dragondaemon/pkg/configdef"
+	"github.com/tauraamui/maildew/internal/config"
+	"github.com/tauraamui/maildew/internal/configdef"
 	account "github.com/tauraamui/maildew/internal/storage"
 	"github.com/tauraamui/maildew/internal/tui"
 	"gorm.io/driver/sqlite"
@@ -26,13 +26,6 @@ func openSQLite() *gorm.DB {
 }
 
 func main() {
-	// cfg, err := config.Load()
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// config.ResolveRootKey()
-
 	if err := config.DefaultCreator().Create(); err != nil {
 		if err != nil {
 			if !errors.Is(err, configdef.ErrConfigAlreadyExists) {
@@ -41,7 +34,7 @@ func main() {
 		}
 	}
 
-	cfg, err := config.DefaultResolver().Resolve()
+	_, err := config.DefaultResolver().Resolve()
 	if err != nil {
 		panic(err)
 	}
