@@ -39,6 +39,7 @@ func (suite *CreateConfigTestSuite) TestConfigCreate() {
 	loadedConfig, err := suite.configCreateResolver.Resolve()
 
 	suite.is.NoErr(err)
+	loadedConfig.RootKey = nil
 	suite.is.Equal(configdef.Values{}, loadedConfig)
 }
 

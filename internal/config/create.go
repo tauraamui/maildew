@@ -64,7 +64,7 @@ func loadRawDefaultConfig() ([]byte, error) {
 }
 
 func mustResolveConfigPath() string {
-	path, err := resolveConfigPath()
+	path, err := resolveConfigFilePath()
 	if err != nil {
 		log.Fatal("unable to resolve config path: %v", err)
 	}

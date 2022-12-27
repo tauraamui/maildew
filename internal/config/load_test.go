@@ -34,7 +34,7 @@ func (suite *LoadConfigTestSuite) TearDownSuite() {
 }
 
 func (suite *LoadConfigTestSuite) SetupTest() {
-	path, err := resolveConfigPath()
+	path, err := resolveConfigFilePath()
 	suite.is.NoErr(err)
 	suite.is.NoErr(suite.fs.MkdirAll(path, os.ModeDir|os.ModePerm))
 	suite.path = path
@@ -89,7 +89,7 @@ func (suite *LoadConfigTestSuite) TestLoadConfigErrorOnResolvingUserConfigDir() 
 	_, err := suite.configResolver.Resolve()
 	is.True(err != nil) // we need resolve to fail here
 	is.Equal(
-		err.Error(), "unable to resolve config.json location: test unable to resolve user config dir",
+		err.Error(), "unable to resolve app config dir location: unable to resolve config.json location: test unable to resolve user config dir",
 	)
 }
 

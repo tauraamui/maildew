@@ -20,7 +20,7 @@ const (
 func load() (configdef.Values, error) {
 	var values configdef.Values
 
-	configPath, err := resolveConfigPath()
+	configPath, err := resolveConfigFilePath()
 	if err != nil {
 		return configdef.Values{}, err
 	}
@@ -54,13 +54,22 @@ func unmarshal(content []byte, values *configdef.Values) error {
 	return nil
 }
 
-func resolveConfigPath() (string, error) {
+func resolveConfigFilePath() (string, error) {
+	configDir, err := resolveAppDirPath()
+	if err != nil {
+		return "", xerror.Errorf("unable to resolve app config dir location: %w", err)
+	}
+
+	return filepath.Join(configDir, configFileName), nil
+}
+
+func resolveAppDirPath() (string, error) {
 	configPath := os.Getenv("DRAGON_DAEMON_CONFIG")
 	if len(configPath) > 0 {
 		return configPath, nil
 	}
 
-	configParentDir, err := UserConfigDir()
+	configParentDir, err := userConfigDir()
 	if err != nil {
 		return "", xerror.Errorf("unable to resolve %s location: %w", configFileName, err)
 	}
@@ -68,10 +77,9 @@ func resolveConfigPath() (string, error) {
 	return filepath.Join(
 		configParentDir,
 		vendorName,
-		appName,
-		configFileName), nil
+		appName), nil
 }
 
-var UserConfigDir = func() (string, error) {
+var userConfigDir = func() (string, error) {
 	return os.UserConfigDir()
 }
