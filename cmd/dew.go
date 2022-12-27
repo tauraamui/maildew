@@ -34,12 +34,12 @@ func main() {
 		}
 	}
 
-	_, err := config.DefaultResolver().Resolve()
+	cfg, err := config.DefaultResolver().Resolve()
 	if err != nil {
 		panic(err)
 	}
 
 	db := openSQLite()
 	ar := account.AccountRepository{DB: db}
-	tui.StartTea(ar)
+	tui.StartTea(cfg, ar)
 }

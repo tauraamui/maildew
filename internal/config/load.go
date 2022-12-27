@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"github.com/tauraamui/maildew/internal/configdef"
-	"github.com/tauraamui/maildew/internal/log"
 	"github.com/tauraamui/xerror"
 )
 
@@ -26,7 +25,7 @@ func load() (configdef.Values, error) {
 		return configdef.Values{}, err
 	}
 
-	log.Info("Resolved config file location: %s", configPath)
+	// log.Info("Resolved config file location: %s", configPath)
 	file, err := readConfigFile(configPath)
 	if err != nil {
 		return configdef.Values{}, err
@@ -61,7 +60,7 @@ func resolveConfigPath() (string, error) {
 		return configPath, nil
 	}
 
-	configParentDir, err := userConfigDir()
+	configParentDir, err := UserConfigDir()
 	if err != nil {
 		return "", xerror.Errorf("unable to resolve %s location: %w", configFileName, err)
 	}
@@ -73,6 +72,6 @@ func resolveConfigPath() (string, error) {
 		configFileName), nil
 }
 
-var userConfigDir = func() (string, error) {
+var UserConfigDir = func() (string, error) {
 	return os.UserConfigDir()
 }

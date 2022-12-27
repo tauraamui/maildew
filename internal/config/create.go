@@ -59,7 +59,7 @@ func writeConfigToDisk(data []byte, path string, overwrite bool) error {
 func loadRawDefaultConfig() ([]byte, error) {
 	key := cryptopasta.NewEncryptionKey()
 	return json.MarshalIndent(configdef.Values{
-		RootKey: string(key[:]),
+		RootKey: key[:],
 	}, "", " ")
 }
 
