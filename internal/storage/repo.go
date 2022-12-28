@@ -23,9 +23,6 @@ func (r AccountRepository) CreateAccount(nick, email, pass string) error {
 	// account := Account{Nick: nick, Email: email, Password: pass}
 	// result := r.DB.Create(&account)
 	// return result.Error
-	r.DB.Update(func(txn *badger.Txn) error {
-		txn.SetEntry()
-	})
 	return nil
 }
 
