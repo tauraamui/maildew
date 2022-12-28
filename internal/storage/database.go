@@ -1,14 +1,11 @@
 package storage
 
 import (
-	"encoding/binary"
-
 	"github.com/dgraph-io/badger/v3"
 )
 
 type DB struct {
-	conn     *badger.DB
-	incIndex int
+	conn *badger.DB
 }
 
 func NewDB(db *badger.DB) (DB, error) {
@@ -24,14 +21,14 @@ func newDB(inMemory bool) (DB, error) {
 	if err != nil {
 		return DB{}, err
 	}
+
 	return DB{conn: db}, nil
 }
 
-func (db DB) persistIndex() {
-	db.conn.Update(func(txn *badger.Txn) error {
-		ib := make([]byte, 8)
-		binary.LittleEndian.PutUint64(ib, uint64(db.incIndex))
-		txn.Set([]byte("x_pk"), ib)
-		return nil
-	})
+func (db DB) GetSeq(key []byte, bandwidth uint64) (*badger.Sequence, error) {
+	return db.conn.GetSequence(key, bandwidth)
+}
+
+func (db DB) Close() error {
+	return db.conn.Close()
 }
