@@ -2,28 +2,13 @@ package main
 
 import (
 	"errors"
-	"log"
 
+	"github.com/dgraph-io/badger/v3"
 	"github.com/tauraamui/maildew/internal/config"
 	"github.com/tauraamui/maildew/internal/configdef"
 	account "github.com/tauraamui/maildew/internal/storage"
 	"github.com/tauraamui/maildew/internal/tui"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
-
-func openSQLite() *gorm.DB {
-	db, err := gorm.Open(sqlite.Open("mail.db"))
-	if err != nil {
-		log.Fatalf("unable to open DB: %v\n", err)
-	}
-
-	if err = db.AutoMigrate(account.Account{}); err != nil {
-		log.Fatal(err)
-	}
-
-	return db
-}
 
 func main() {
 	if err := config.DefaultCreator().Create(); err != nil {
@@ -39,7 +24,11 @@ func main() {
 		panic(err)
 	}
 
-	db := openSQLite()
+	db, err := badger.Open(badger.DefaultOptions("").WithInMemory(true))
+	if err != nil {
+		panic(err)
+	}
+
 	ar := account.AccountRepository{DB: db}
 	tui.StartTea(cfg, ar)
 }

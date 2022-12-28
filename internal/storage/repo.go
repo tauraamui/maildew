@@ -1,6 +1,9 @@
-package account
+package storage
 
-import "gorm.io/gorm"
+import (
+	"github.com/dgraph-io/badger/v3"
+	"gorm.io/gorm"
+)
 
 type Account struct {
 	gorm.Model
@@ -13,17 +16,22 @@ type Repository interface {
 }
 
 type AccountRepository struct {
-	DB *gorm.DB
+	DB *badger.DB
 }
 
 func (r AccountRepository) CreateAccount(nick, email, pass string) error {
-	account := Account{Nick: nick, Email: email, Password: pass}
-	result := r.DB.Create(&account)
-	return result.Error
+	// account := Account{Nick: nick, Email: email, Password: pass}
+	// result := r.DB.Create(&account)
+	// return result.Error
+	r.DB.Update(func(txn *badger.Txn) error {
+		txn.SetEntry()
+	})
+	return nil
 }
 
 func (r AccountRepository) GetAccounts() ([]Account, error) {
-	var accounts []Account
-	result := r.DB.Find(&accounts)
-	return accounts, result.Error
+	// var accounts []Account
+	// result := r.DB.Find(&accounts)
+	// return accounts, result.Error
+	return nil, nil
 }
