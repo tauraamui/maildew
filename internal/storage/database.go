@@ -17,7 +17,7 @@ func NewMemDB() (DB, error) {
 }
 
 func newDB(inMemory bool) (DB, error) {
-	db, err := badger.Open(badger.DefaultOptions("").WithInMemory(inMemory))
+	db, err := badger.Open(badger.DefaultOptions("").WithLogger(nil).WithInMemory(inMemory))
 	if err != nil {
 		return DB{}, err
 	}

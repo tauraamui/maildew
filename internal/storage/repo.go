@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"github.com/dgraph-io/badger/v3"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +15,7 @@ type Repository interface {
 }
 
 type AccountRepository struct {
-	DB *badger.DB
+	DB DB
 }
 
 func (r AccountRepository) CreateAccount(nick, email, pass string) error {
