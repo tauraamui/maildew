@@ -13,7 +13,6 @@ func TestEntryStoreValuesInTable(t *testing.T) {
 	e := storage.Entry{
 		TableName:  "users",
 		ColumnName: "email",
-		RowID:      0,
 		Data:       []byte{0x33},
 	}
 
