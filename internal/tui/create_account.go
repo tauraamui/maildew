@@ -22,6 +22,7 @@ var (
 	noStyle             = lipgloss.NewStyle()
 	helpStyle           = blurredStyle.Copy()
 	cursorModeHelpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
+	successStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
 	errorStyle          = lipgloss.NewStyle().Foreground(lipgloss.Color("160"))
 
 	focusedButton  = focusedStyle.Copy().Render("[ Submit ]")
@@ -38,6 +39,7 @@ type createaccountmodel struct {
 	viewport   viewport.Model
 	inputs     []textinput.Model
 	cursorMode textinput.CursorMode
+	success    string
 	err        error
 }
 
@@ -153,6 +155,8 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			Password: msg.password,
 		}); err != nil {
 			m.err = err
+		} else {
+			m.success = "account created"
 		}
 	}
 
@@ -197,6 +201,12 @@ func (m createaccountmodel) View() string {
 		b.WriteRune('\n')
 		b.WriteRune('\n')
 		b.WriteString(errorStyle.Render(fmt.Sprintf("%s...", m.err.Error())))
+	}
+
+	if len(m.success) > 0 {
+		b.WriteRune('\n')
+		b.WriteRune('\n')
+		b.WriteString(successStyle.Render(fmt.Sprintf("%s...", m.success)))
 	}
 
 	ui := lipgloss.JoinVertical(lipgloss.Center, b.String())
