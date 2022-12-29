@@ -41,3 +41,53 @@ func TestEntryStoreValuesInTable(t *testing.T) {
 
 	is.Equal(newEntry.Data, []byte{0x33})
 }
+
+func TestSequences(t *testing.T) {
+	is := is.New(t)
+
+	db, err := storage.NewMemDB()
+	is.NoErr(err)
+	defer db.Close()
+
+	fruitEntry := storage.Entry{
+		TableName:  "fruits",
+		ColumnName: "color",
+	}
+
+	chocolateEntry := storage.Entry{
+		TableName:  "chocolate",
+		ColumnName: "flavour",
+	}
+
+	fruitSeq, err := db.GetSeq(fruitEntry.PrefixKey(), 100)
+	is.NoErr(err) // error occurred on getting db sequence
+	defer fruitSeq.Release()
+
+	chocolateSeq, err := db.GetSeq(chocolateEntry.PrefixKey(), 100)
+	is.NoErr(err) // error occurred on getting db sequence
+	defer fruitSeq.Release()
+
+	id, err := fruitSeq.Next()
+	is.NoErr(err) // error occurred when aquiring next iter value
+	is.Equal(id, uint64(0))
+
+	id, err = chocolateSeq.Next()
+	is.NoErr(err) // error occurred when aquiring next iter value
+	is.Equal(id, uint64(0))
+
+	id, err = fruitSeq.Next()
+	is.NoErr(err) // error occurred when aquiring next iter value
+	is.Equal(id, uint64(1))
+
+	id, err = chocolateSeq.Next()
+	is.NoErr(err) // error occurred when aquiring next iter value
+	is.Equal(id, uint64(1))
+
+	id, err = fruitSeq.Next()
+	is.NoErr(err) // error occurred when aquiring next iter value
+	is.Equal(id, uint64(2))
+
+	id, err = chocolateSeq.Next()
+	is.NoErr(err) // error occurred when aquiring next iter value
+	is.Equal(id, uint64(2))
+}
