@@ -4,7 +4,6 @@ package tui
 // from the Bubbles component library.
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -12,6 +11,8 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/tauraamui/maildew/internal/storage/models"
+	"github.com/tauraamui/maildew/internal/storage/repo"
 )
 
 var (
@@ -31,6 +32,7 @@ var (
 )
 
 type createaccountmodel struct {
+	ar         repo.Accounts
 	focusIndex int
 	windowSize tea.WindowSizeMsg
 	viewport   viewport.Model
@@ -39,8 +41,9 @@ type createaccountmodel struct {
 	err        error
 }
 
-func newCreateAccountModel() createaccountmodel {
+func newCreateAccountModel(ar repo.Accounts) createaccountmodel {
 	m := createaccountmodel{
+		ar:     ar,
 		inputs: make([]textinput.Model, 3),
 	}
 
@@ -144,7 +147,13 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
 	case createAccountMsg:
-		m.err = errors.New("creating accounts is not yet supported")
+		if err := m.ar.Save(models.Account{
+			Email:    msg.email,
+			Nick:     msg.nick,
+			Password: msg.password,
+		}); err != nil {
+			m.err = err
+		}
 	}
 
 	// Handle character input and blinking

@@ -7,11 +7,11 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/tauraamui/maildew/internal/configdef"
-	account "github.com/tauraamui/maildew/internal/storage"
+	"github.com/tauraamui/maildew/internal/storage/repo"
 )
 
 // StartTea the entry point for the UI. Initializes the model.
-func StartTea(cfg configdef.Values, ar account.Repository) {
+func StartTea(cfg configdef.Values, ur repo.Accounts) {
 	if cfg.Debug {
 		if f, err := tea.LogToFile("debug.log", "debug"); err != nil {
 			fmt.Println("Couldn't open a file for logging:", err)
@@ -26,7 +26,7 @@ func StartTea(cfg configdef.Values, ar account.Repository) {
 		}
 	}
 
-	p := tea.NewProgram(InitMail(ar), tea.WithAltScreen())
+	p := tea.NewProgram(InitMail(ur), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)

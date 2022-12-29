@@ -2,7 +2,8 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	account "github.com/tauraamui/maildew/internal/storage"
+	"github.com/tauraamui/maildew/internal/storage/repo"
+	// account "github.com/tauraamui/maildew/internal/storage"
 )
 
 type mode int
@@ -22,7 +23,7 @@ type (
 
 // Model the entryui model definition
 type Model struct {
-	ar            account.Repository
+	ar            repo.Accounts
 	mode          mode
 	createAccount tea.Model
 	windowSize    tea.WindowSizeMsg
@@ -32,11 +33,11 @@ type Model struct {
 }
 
 // InitProject initialize the mailui model for your program
-func InitMail(ar account.Repository) tea.Model {
+func InitMail(ar repo.Accounts) tea.Model {
 	m := Model{
 		ar:            ar,
 		mode:          list,
-		createAccount: newCreateAccountModel(),
+		createAccount: newCreateAccountModel(ar),
 		list:          newListModel(),
 	}
 	return &m
@@ -44,10 +45,11 @@ func InitMail(ar account.Repository) tea.Model {
 
 // Init run any intial IO on program start
 func (m *Model) Init() tea.Cmd {
-	accs, _ := m.ar.GetAccounts()
-	if len(accs) == 0 {
-		m.mode = createAccount
-	}
+	m.mode = createAccount
+	// accs, _ := m.ar.GetAccounts()
+	// if len(accs) == 0 {
+	// 	m.mode = createAccount
+	// }
 	return nil
 }
 
