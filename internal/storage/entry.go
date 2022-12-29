@@ -26,3 +26,21 @@ func Store(db DB, e Entry) error {
 		return txn.Set([]byte(e.Key()), e.Data)
 	})
 }
+
+func Get(db DB, e *Entry) error {
+	return db.conn.View(func(txn *badger.Txn) error {
+		item, err := txn.Get(e.Key())
+		if err != nil {
+			return err
+		}
+
+		if err := item.Value(func(val []byte) error {
+			e.Data = val
+			return nil
+		}); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}

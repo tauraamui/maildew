@@ -14,7 +14,7 @@ func TestEntryStoreValuesInTable(t *testing.T) {
 		TableName:  "users",
 		ColumnName: "email",
 		RowID:      0,
-		Data:       []byte{},
+		Data:       []byte{0x33},
 	}
 
 	db, err := storage.NewMemDB()
@@ -30,4 +30,14 @@ func TestEntryStoreValuesInTable(t *testing.T) {
 	e.RowID = id
 
 	is.NoErr(storage.Store(db, e)) // error occurred when calling store
+
+	newEntry := storage.Entry{
+		TableName:  e.TableName,
+		ColumnName: e.ColumnName,
+		RowID:      e.RowID,
+		Data:       nil,
+	}
+	is.NoErr(storage.Get(db, &newEntry))
+
+	is.Equal(newEntry.Data, []byte{0x33})
 }
