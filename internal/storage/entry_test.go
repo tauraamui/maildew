@@ -23,6 +23,7 @@ func TestEntryStoreValuesInTable(t *testing.T) {
 
 	seq, err := db.GetSeq(e.PrefixKey(), 100)
 	is.NoErr(err) // error occurred on getting db sequence
+	defer seq.Release()
 
 	id, err := seq.Next()
 	is.NoErr(err) // error occurred when aquiring next iter value
