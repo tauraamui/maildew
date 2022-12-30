@@ -1,7 +1,9 @@
 package storage
 
 import (
+	"encoding/binary"
 	"fmt"
+	"reflect"
 
 	"github.com/dgraph-io/badger/v3"
 )
@@ -43,4 +45,43 @@ func Get(db DB, e *Entry) error {
 
 		return nil
 	})
+}
+
+func ConvertToEntries(tableName string, rowID uint64, x interface{}) []Entry {
+	v := reflect.ValueOf(x)
+
+	entries := []Entry{}
+
+	for i := 0; i < v.NumField(); i++ {
+		vv := reflect.Indirect(v)
+		e := Entry{
+			TableName:  tableName,
+			ColumnName: vv.Type().Field(i).Name,
+			RowID:      rowID,
+			Data:       ConvertToBytes(v.Field(i).Interface()),
+		}
+
+		entries = append(entries, e)
+	}
+
+	return entries
+}
+
+func ConvertToBytes(x interface{}) []byte {
+	switch v := x.(type) {
+	case []byte:
+		return v
+	case string:
+		return []byte(v)
+	case int:
+		b := make([]byte, 8)
+		binary.BigEndian.PutUint64(b, uint64(v))
+		return b
+	case bool:
+		if v {
+			return []byte{0x1}
+		}
+		return []byte{0x0}
+	}
+	return nil
 }

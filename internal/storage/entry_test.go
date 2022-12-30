@@ -42,6 +42,35 @@ func TestEntryStoreValuesInTable(t *testing.T) {
 	is.Equal(newEntry.Data, []byte{0x33})
 }
 
+func TestConvertToEntries(t *testing.T) {
+	is := is.New(t)
+
+	i := struct {
+		Foo string
+		Bar int
+	}{
+		Foo: "Foot",
+		Bar: 4,
+	}
+
+	e := storage.ConvertToEntries("test", 0, i)
+	is.Equal(len(e), 2)
+
+	is = is.NewRelaxed(t)
+
+	is.Equal(storage.Entry{
+		TableName:  "test",
+		ColumnName: "Foo",
+		Data:       []byte{70, 111, 111, 116},
+	}, e[0])
+
+	is.Equal(storage.Entry{
+		TableName:  "test",
+		ColumnName: "Bar",
+		Data:       []byte{0, 0, 0, 0, 0, 0, 0, 4},
+	}, e[1])
+}
+
 func TestSequences(t *testing.T) {
 	is := is.New(t)
 
