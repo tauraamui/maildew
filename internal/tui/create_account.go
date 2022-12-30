@@ -149,14 +149,15 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
 	case createAccountMsg:
-		if err := m.ar.Save(models.Account{
+		acc := models.Account{
 			Email:    msg.email,
 			Nick:     msg.nick,
 			Password: msg.password,
-		}); err != nil {
+		}
+		if err := m.ar.Save(&acc); err != nil {
 			m.err = err
 		} else {
-			m.success = "account created"
+			m.success = fmt.Sprintf("account created, user ID: %d", acc.ID)
 		}
 	}
 

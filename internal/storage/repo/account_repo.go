@@ -15,55 +15,34 @@ type Accounts struct {
 	seq *badger.Sequence
 }
 
-func (r *Accounts) Save(user models.Account) error {
-	emailEntry := storage.Entry{
-		TableName:  accountsTableName,
-		ColumnName: "email",
-		Data:       []byte(user.Email),
-	}
-
-	if r.seq == nil {
-		seq, err := r.DB.GetSeq(emailEntry.PrefixKey(), 100)
-		if err != nil {
-			return err
-		}
-		r.seq = seq
-	}
-
-	rowID, err := r.seq.Next()
+func (r *Accounts) Save(user *models.Account) error {
+	rowID, err := r.nextRowID()
 	if err != nil {
 		return err
 	}
 
-	emailEntry.RowID = rowID
-
-	nickEntry := storage.Entry{
-		TableName:  accountsTableName,
-		ColumnName: "nick",
-		Data:       []byte(user.Nick),
-		RowID:      rowID,
+	entries := storage.ConvertToEntries(accountsTableName, rowID, *user)
+	for _, e := range entries {
+		if err := storage.Store(r.DB, e); err != nil {
+			return err
+		}
 	}
 
-	passwordEntry := storage.Entry{
-		TableName:  accountsTableName,
-		ColumnName: "password",
-		Data:       []byte(user.Password),
-		RowID:      rowID,
-	}
-
-	if err := storage.Store(r.DB, emailEntry); err != nil {
-		return err
-	}
-
-	if err := storage.Store(r.DB, nickEntry); err != nil {
-		return err
-	}
-
-	if err := storage.Store(r.DB, passwordEntry); err != nil {
-		return err
-	}
+	user.ID = rowID
 
 	return nil
+}
+
+func (r *Accounts) nextRowID() (uint64, error) {
+	if r.seq == nil {
+		seq, err := r.DB.GetSeq([]byte(accountsTableName), 100)
+		if err != nil {
+			return 0, err
+		}
+		r.seq = seq
+	}
+
+	return r.seq.Next()
 }
 
 func (r Accounts) Close() {
