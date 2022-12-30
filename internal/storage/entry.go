@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/dgraph-io/badger/v3"
 )
@@ -56,7 +57,7 @@ func ConvertToEntries(tableName string, rowID uint64, x interface{}) []Entry {
 		vv := reflect.Indirect(v)
 		e := Entry{
 			TableName:  tableName,
-			ColumnName: vv.Type().Field(i).Name,
+			ColumnName: strings.ToLower(vv.Type().Field(i).Name),
 			RowID:      rowID,
 			Data:       ConvertToBytes(v.Field(i).Interface()),
 		}

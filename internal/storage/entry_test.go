@@ -49,7 +49,7 @@ func TestConvertToEntries(t *testing.T) {
 		Foo string
 		Bar int
 	}{
-		Foo: "Foot",
+		Foo: "Foo",
 		Bar: 4,
 	}
 
@@ -60,13 +60,13 @@ func TestConvertToEntries(t *testing.T) {
 
 	is.Equal(storage.Entry{
 		TableName:  "test",
-		ColumnName: "Foo",
-		Data:       []byte{70, 111, 111, 116},
+		ColumnName: "foo",
+		Data:       []byte{70, 111, 111},
 	}, e[0])
 
 	is.Equal(storage.Entry{
 		TableName:  "test",
-		ColumnName: "Bar",
+		ColumnName: "bar",
 		Data:       []byte{0, 0, 0, 0, 0, 0, 0, 4},
 	}, e[1])
 }
