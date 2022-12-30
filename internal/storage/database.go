@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"fmt"
+
 	"github.com/dgraph-io/badger/v3"
 )
 
@@ -27,6 +29,27 @@ func newDB(inMemory bool) (DB, error) {
 
 func (db DB) GetSeq(key []byte, bandwidth uint64) (*badger.Sequence, error) {
 	return db.conn.GetSequence(key, bandwidth)
+}
+
+func (db DB) DumpToStdout() error {
+	return db.conn.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchSize = 10
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+			k := item.Key()
+			err := item.Value(func(v []byte) error {
+				fmt.Printf("key=%s, value=%s\n", k, v)
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func (db DB) Close() error {

@@ -55,9 +55,16 @@ func ConvertToEntries(tableName string, rowID uint64, x interface{}) []Entry {
 
 	for i := 0; i < v.NumField(); i++ {
 		vv := reflect.Indirect(v)
+		f := vv.Type().Field(i)
+
+		fOpts := resolveFieldOptions(f)
+		if fOpts.Ignore {
+			continue
+		}
+
 		e := Entry{
 			TableName:  tableName,
-			ColumnName: strings.ToLower(vv.Type().Field(i).Name),
+			ColumnName: strings.ToLower(f.Name),
 			RowID:      rowID,
 			Data:       ConvertToBytes(v.Field(i).Interface()),
 		}
@@ -66,6 +73,17 @@ func ConvertToEntries(tableName string, rowID uint64, x interface{}) []Entry {
 	}
 
 	return entries
+}
+
+type mdbFieldOptions struct {
+	Ignore bool
+}
+
+func resolveFieldOptions(f reflect.StructField) mdbFieldOptions {
+	mdbTagValue := f.Tag.Get("mdb")
+	return mdbFieldOptions{
+		Ignore: strings.Contains(mdbTagValue, "ignore"),
+	}
 }
 
 func ConvertToBytes(x interface{}) []byte {
