@@ -45,7 +45,7 @@ func TestEntryStoreValuesInTable(t *testing.T) {
 func TestConvertToEntries(t *testing.T) {
 	is := is.New(t)
 
-	i := struct {
+	source := struct {
 		Foo string
 		Bar int
 	}{
@@ -53,7 +53,7 @@ func TestConvertToEntries(t *testing.T) {
 		Bar: 4,
 	}
 
-	e := storage.ConvertToEntries("test", 0, i)
+	e := storage.ConvertToEntries("test", 0, source)
 	is.Equal(len(e), 2)
 
 	is = is.NewRelaxed(t)
@@ -67,7 +67,7 @@ func TestConvertToEntries(t *testing.T) {
 	is.Equal(storage.Entry{
 		TableName:  "test",
 		ColumnName: "bar",
-		Data:       []byte{0, 0, 0, 0, 0, 0, 0, 4},
+		Data:       []byte{52},
 	}, e[1])
 }
 

@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -62,17 +62,59 @@ func ConvertToEntries(tableName string, rowID uint64, x interface{}) []Entry {
 			continue
 		}
 
+		bd, err := convertToBytes(v.Field(i).Interface())
+		if err != nil {
+			return entries
+		}
+
 		e := Entry{
 			TableName:  tableName,
 			ColumnName: strings.ToLower(f.Name),
 			RowID:      rowID,
-			Data:       ConvertToBytes(v.Field(i).Interface()),
+			Data:       bd,
 		}
 
 		entries = append(entries, e)
 	}
 
 	return entries
+}
+
+func convertToBytes(i interface{}) ([]byte, error) {
+	// Check the type of the interface.
+	switch v := i.(type) {
+	case []byte:
+		// Return the input as a []byte if it is already a []byte.
+		return v, nil
+	case string:
+		// Convert the string to a []byte and return it.
+		return []byte(v), nil
+	default:
+		// Use json.Marshal to convert the interface to a []byte.
+		return json.Marshal(v)
+	}
+}
+
+func convertFromBytes(data []byte, i interface{}) error {
+	// Check that the destination argument is a pointer.
+	if reflect.TypeOf(i).Kind() != reflect.Ptr {
+		return fmt.Errorf("destination must be a pointer")
+	}
+
+	// Check the type of the interface.
+	switch v := i.(type) {
+	case *[]byte:
+		// Set the value of the interface to the []byte if it is a pointer to a []byte.
+		*v = data
+		return nil
+	case *string:
+		// Convert the []byte to a string and set the value of the interface to the string.
+		*v = string(data)
+		return nil
+	default:
+		// Use json.Unmarshal to convert the []byte to the interface.
+		return json.Unmarshal(data, v)
+	}
 }
 
 type mdbFieldOptions struct {
@@ -84,23 +126,4 @@ func resolveFieldOptions(f reflect.StructField) mdbFieldOptions {
 	return mdbFieldOptions{
 		Ignore: strings.Contains(mdbTagValue, "ignore"),
 	}
-}
-
-func ConvertToBytes(x interface{}) []byte {
-	switch v := x.(type) {
-	case []byte:
-		return v
-	case string:
-		return []byte(v)
-	case int:
-		b := make([]byte, 8)
-		binary.BigEndian.PutUint64(b, uint64(v))
-		return b
-	case bool:
-		if v {
-			return []byte{0x1}
-		}
-		return []byte{0x0}
-	}
-	return nil
 }
