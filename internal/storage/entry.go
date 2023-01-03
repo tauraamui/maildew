@@ -50,36 +50,14 @@ func Get(db DB, e *Entry) error {
 	})
 }
 
+func ConvertToBlankEntries(tableName string, rowID uint64, x interface{}) []Entry {
+	v := reflect.ValueOf(x)
+	return convertToEntries(tableName, rowID, v, false)
+}
+
 func ConvertToEntries(tableName string, rowID uint64, x interface{}) []Entry {
 	v := reflect.ValueOf(x)
-
-	entries := []Entry{}
-
-	for i := 0; i < v.NumField(); i++ {
-		vv := reflect.Indirect(v)
-		f := vv.Type().Field(i)
-
-		fOpts := resolveFieldOptions(f)
-		if fOpts.Ignore {
-			continue
-		}
-
-		bd, err := convertToBytes(v.Field(i).Interface())
-		if err != nil {
-			return entries
-		}
-
-		e := Entry{
-			TableName:  tableName,
-			ColumnName: strings.ToLower(f.Name),
-			RowID:      rowID,
-			Data:       bd,
-		}
-
-		entries = append(entries, e)
-	}
-
-	return entries
+	return convertToEntries(tableName, rowID, v, true)
 }
 
 func LoadEntry(s interface{}, entry Entry) error {
@@ -109,6 +87,38 @@ func LoadEntries(s interface{}, entries []Entry) error {
 	}
 
 	return nil
+}
+
+func convertToEntries(tableName string, rowID uint64, v reflect.Value, includeData bool) []Entry {
+	entries := []Entry{}
+
+	for i := 0; i < v.NumField(); i++ {
+		vv := reflect.Indirect(v)
+		f := vv.Type().Field(i)
+
+		fOpts := resolveFieldOptions(f)
+		if fOpts.Ignore {
+			continue
+		}
+
+		e := Entry{
+			TableName:  tableName,
+			ColumnName: strings.ToLower(f.Name),
+			RowID:      rowID,
+		}
+
+		if includeData {
+			bd, err := convertToBytes(v.Field(i).Interface())
+			if err != nil {
+				return entries
+			}
+			e.Data = bd
+		}
+
+		entries = append(entries, e)
+	}
+
+	return entries
 }
 
 func convertToBytes(i interface{}) ([]byte, error) {

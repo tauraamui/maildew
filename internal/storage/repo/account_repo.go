@@ -33,6 +33,24 @@ func (r *Accounts) Save(user *models.Account) error {
 	return nil
 }
 
+func (r *Accounts) GetByID(rowID uint64) (models.Account, error) {
+	acc := models.Account{
+		ID: rowID,
+	}
+	blankEntries := storage.ConvertToBlankEntries(accountsTableName, rowID, acc)
+	for _, e := range blankEntries {
+		if err := storage.Get(r.DB, &e); err != nil {
+			return acc, err
+		}
+
+		if err := storage.LoadEntry(&acc, e); err != nil {
+			return acc, err
+		}
+	}
+
+	return acc, nil
+}
+
 func (r *Accounts) nextRowID() (uint64, error) {
 	if r.seq == nil {
 		seq, err := r.DB.GetSeq([]byte(accountsTableName), 100)
