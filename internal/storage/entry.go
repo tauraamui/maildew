@@ -82,22 +82,29 @@ func ConvertToEntries(tableName string, rowID uint64, x interface{}) []Entry {
 	return entries
 }
 
-func LoadEntries(s interface{}, entries []Entry) error {
+func LoadEntry(s interface{}, entry Entry) error {
 	// Convert the interface value to a reflect.Value so we can access its fields
 	val := reflect.ValueOf(s).Elem()
 
-	// Iterate over the list of entries
-	for _, entry := range entries {
-		// Check if the entry's ColumnName field matches the name of any of the struct's fields
-		field := val.FieldByName(cases.Title(language.English).String(entry.ColumnName))
-		if !field.IsValid() {
-			// The struct does not have a field with the same name as the entry's ColumnName, so skip this entry
-			continue
-		}
+	// Check if the entry's ColumnName field matches the name of any of the struct's fields
+	field := val.FieldByName(cases.Title(language.English).String(entry.ColumnName))
+	if !field.IsValid() {
+		// The struct does not have a field with the same name as the entry's ColumnName, so return an error
+		return fmt.Errorf("struct does not have a field with name %q", entry.ColumnName)
+	}
 
-		// Convert the entry's Data field to the type of the target field
-		if err := convertFromBytes(entry.Data, field.Addr().Interface()); err != nil {
-			return fmt.Errorf("failed to convert entry data to field type: %v", err)
+	// Convert the entry's Data field to the type of the target field
+	if err := convertFromBytes(entry.Data, field.Addr().Interface()); err != nil {
+		return fmt.Errorf("failed to convert entry data to field type: %v", err)
+	}
+
+	return nil
+}
+
+func LoadEntries(s interface{}, entries []Entry) error {
+	for _, entry := range entries {
+		if err := LoadEntry(s, entry); err != nil {
+			return err
 		}
 	}
 
