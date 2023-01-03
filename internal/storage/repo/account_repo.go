@@ -51,6 +51,27 @@ func (r *Accounts) GetByID(rowID uint64) (models.Account, error) {
 	return acc, nil
 }
 
+func (r *Accounts) GetAll() ([]models.Account, error) {
+	// func IterateKeys(db *badger.DB, prefix []byte) error {
+	// 	return db.View(func(txn *badger.Txn) error {
+	// 		it := txn.NewIterator(badger.DefaultIteratorOptions)
+	// 		defer it.Close()
+	// 		prefixIter := it.Seek(prefix)
+
+	// 		for prefixIter.ValidForPrefix(prefix) {
+	// 			item := prefixIter.Item()
+	// 			key := item.Key()
+	// 			fmt.Println(key)
+	// 			prefixIter.Next()
+	// 		}
+
+	// 		return nil
+	// 	})
+	// }
+
+	return nil, nil
+}
+
 func (r *Accounts) nextRowID() (uint64, error) {
 	if r.seq == nil {
 		seq, err := r.DB.GetSeq([]byte(accountsTableName), 100)
