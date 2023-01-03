@@ -15,5 +15,5 @@
 # vendor/
 debug.log
 mail.db
-dew
+builds/dew
 .mailkey

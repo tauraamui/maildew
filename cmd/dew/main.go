@@ -3,10 +3,10 @@ package main
 import (
 	"errors"
 
-	"github.com/dgraph-io/badger/v3"
 	"github.com/tauraamui/maildew/internal/config"
 	"github.com/tauraamui/maildew/internal/configdef"
-	account "github.com/tauraamui/maildew/internal/storage"
+	"github.com/tauraamui/maildew/internal/storage"
+	"github.com/tauraamui/maildew/internal/storage/repo"
 	"github.com/tauraamui/maildew/internal/tui"
 )
 
@@ -24,11 +24,15 @@ func main() {
 		panic(err)
 	}
 
-	db, err := badger.Open(badger.DefaultOptions("").WithInMemory(true))
+	db, err := storage.NewMemDB()
 	if err != nil {
 		panic(err)
 	}
 
-	ar := account.AccountRepository{DB: db}
+	ar := repo.Accounts{DB: db}
+	defer ar.Close()
+
 	tui.StartTea(cfg, ar)
+
+	db.DumpToStdout()
 }
