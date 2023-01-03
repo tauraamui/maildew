@@ -31,6 +31,10 @@ func (db DB) GetSeq(key []byte, bandwidth uint64) (*badger.Sequence, error) {
 	return db.conn.GetSequence(key, bandwidth)
 }
 
+func (db DB) View(f func(txn *badger.Txn) error) error {
+	return db.conn.View(f)
+}
+
 func (db DB) DumpToStdout() error {
 	return db.conn.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
