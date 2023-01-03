@@ -35,6 +35,10 @@ func (db DB) View(f func(txn *badger.Txn) error) error {
 	return db.conn.View(f)
 }
 
+func (db DB) Update(f func(txn *badger.Txn) error) error {
+	return db.conn.Update(f)
+}
+
 func (db DB) DumpToStdout() error {
 	return db.conn.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions

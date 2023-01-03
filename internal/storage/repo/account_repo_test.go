@@ -44,6 +44,39 @@ func TestSaveUser(t *testing.T) {
 	}))
 }
 
+func TestGetUser(t *testing.T) {
+	is := is.New(t)
+
+	r, err := resolveRepo()
+	is.NoErr(err)
+	defer r.Close()
+
+	is.NoErr(insertContents(r.DB, map[string][]byte{
+		"accounts":            {0, 0, 0, 0, 0, 0, 0, 100},
+		"accounts.email.0":    []byte("test@place.com"),
+		"accounts.nick.0":     []byte("Test User"),
+		"accounts.password.0": []byte("fefweiofeifwwef"),
+	}))
+
+	acc, err := r.GetByID(0)
+	is.NoErr(err)
+
+	is.Equal(acc.Email, "test@place.com")
+	is.Equal(acc.Nick, "Test User")
+	is.Equal(acc.Password, "fefweiofeifwwef")
+}
+
+func insertContents(db storage.DB, cnts map[string][]byte) error {
+	return db.Update(func(txn *badger.Txn) error {
+		for k, v := range cnts {
+			if err := txn.Set([]byte(k), v); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 func compareContentsWithExpected(db storage.DB, exp map[string][]byte) error {
 	return db.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
