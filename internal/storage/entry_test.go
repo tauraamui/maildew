@@ -71,6 +71,31 @@ func TestConvertToEntries(t *testing.T) {
 	}, e[1])
 }
 
+func TestUpdateStruct(t *testing.T) {
+	// Define a struct type to use for the test
+	type TestStruct struct {
+		Field1 string
+		Field2 int
+		Field3 bool
+	}
+
+	// Create a slice of Entry values to use as input
+	entries := []storage.Entry{
+		{ColumnName: "field1", Data: []byte("hello")},
+		{ColumnName: "field2", Data: []byte("123")},
+		{ColumnName: "field3", Data: []byte("true")},
+	}
+
+	s := TestStruct{}
+
+	is := is.New(t)
+
+	is.NoErr(storage.LoadEntries(&s, entries)) // LoadEntries returned an error
+	// Check that the values of the TestStruct fields were updated correctly
+	expected := TestStruct{Field1: "hello", Field2: 123, Field3: true}
+	is.Equal(s, expected) // Use the Equal method of the is package to compare the values
+}
+
 func TestSequences(t *testing.T) {
 	is := is.New(t)
 

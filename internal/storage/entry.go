@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/dgraph-io/badger/v3"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type Entry struct {
@@ -78,6 +80,28 @@ func ConvertToEntries(tableName string, rowID uint64, x interface{}) []Entry {
 	}
 
 	return entries
+}
+
+func LoadEntries(s interface{}, entries []Entry) error {
+	// Convert the interface value to a reflect.Value so we can access its fields
+	val := reflect.ValueOf(s).Elem()
+
+	// Iterate over the list of entries
+	for _, entry := range entries {
+		// Check if the entry's ColumnName field matches the name of any of the struct's fields
+		field := val.FieldByName(cases.Title(language.English).String(entry.ColumnName))
+		if !field.IsValid() {
+			// The struct does not have a field with the same name as the entry's ColumnName, so skip this entry
+			continue
+		}
+
+		// Convert the entry's Data field to the type of the target field
+		if err := convertFromBytes(entry.Data, field.Addr().Interface()); err != nil {
+			return fmt.Errorf("failed to convert entry data to field type: %v", err)
+		}
+	}
+
+	return nil
 }
 
 func convertToBytes(i interface{}) ([]byte, error) {
