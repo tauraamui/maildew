@@ -81,7 +81,6 @@ func (m createaccountmodel) Init() tea.Cmd {
 }
 
 func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-
 	var vpCmd tea.Cmd
 	m.viewport, vpCmd = m.viewport.Update(msg)
 
@@ -113,6 +112,8 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if s == "enter" && m.focusIndex == len(m.inputs) {
 				m.err = nil
 				cmds = append(cmds, createAccountCmd(m.inputs[0].Value(), m.inputs[1].Value(), m.inputs[2].Value()))
+				cmds = append(cmds, clearFieldsResetFormCmd())
+				return m, tea.Batch(cmds...)
 			}
 
 			// Cycle indexes
@@ -128,26 +129,36 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.focusIndex = len(m.inputs)
 			}
 
-			inputCmds := make([]tea.Cmd, len(m.inputs))
-			for i := 0; i <= len(m.inputs)-1; i++ {
-				if i == m.focusIndex {
-					// Set focused state
-					inputCmds[i] = m.inputs[i].Focus()
-					m.inputs[i].PromptStyle = focusedStyle
-					m.inputs[i].TextStyle = focusedStyle
-					continue
-				}
-				// Remove focused state
-				m.inputs[i].Blur()
-				m.inputs[i].PromptStyle = noStyle
-				m.inputs[i].TextStyle = noStyle
-			}
-			cmds = append(cmds, inputCmds...)
-
-			return m, tea.Batch(cmds...)
+			return m, updateFocusedInputsCmd(m.focusIndex)
 		}
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
+	case updateFocusedInputsMsg:
+		fi := msg.index
+		inputCmds := make([]tea.Cmd, len(m.inputs))
+		for i := 0; i < len(m.inputs); i++ {
+			if i == fi {
+				// Set focused state
+				inputCmds[i] = m.inputs[i].Focus()
+				m.inputs[i].PromptStyle = focusedStyle
+				m.inputs[i].TextStyle = focusedStyle
+				continue
+			}
+			// Remove focused state
+			m.inputs[i].Blur()
+			m.inputs[i].PromptStyle = noStyle
+			m.inputs[i].TextStyle = noStyle
+		}
+		cmds = append(cmds, inputCmds...)
+
+		return m, tea.Batch(cmds...)
+	case clearFieldsResetFormMsg:
+		for i := 0; i < len(m.inputs); i++ {
+			m.inputs[i].SetValue("")
+		}
+		m.focusIndex = 0
+
+		return m, updateFocusedInputsCmd(m.focusIndex)
 	case createAccountMsg:
 		acc := models.Account{
 			Email:    msg.email,

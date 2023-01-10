@@ -18,7 +18,11 @@ type (
 	createAccountMsg struct {
 		nick, email, password string
 	}
-	authenticateUserMsg struct{}
+	updateFocusedInputsMsg struct {
+		index int
+	}
+	clearFieldsResetFormMsg struct{}
+	authenticateUserMsg     struct{}
 )
 
 // Model the entryui model definition
