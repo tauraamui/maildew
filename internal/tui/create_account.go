@@ -134,24 +134,7 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
 	case updateFocusedInputsMsg:
-		fi := msg.index
-		inputCmds := make([]tea.Cmd, len(m.inputs))
-		for i := 0; i < len(m.inputs); i++ {
-			if i == fi {
-				// Set focused state
-				inputCmds[i] = m.inputs[i].Focus()
-				m.inputs[i].PromptStyle = focusedStyle
-				m.inputs[i].TextStyle = focusedStyle
-				continue
-			}
-			// Remove focused state
-			m.inputs[i].Blur()
-			m.inputs[i].PromptStyle = noStyle
-			m.inputs[i].TextStyle = noStyle
-		}
-		cmds = append(cmds, inputCmds...)
-
-		return m, tea.Batch(cmds...)
+		return m.updateFocusedInputs(msg.index)
 	case clearFieldsResetFormMsg:
 		for i := 0; i < len(m.inputs); i++ {
 			m.inputs[i].SetValue("")
@@ -176,6 +159,26 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmd := m.updateInputs(msg)
 
 	return m, cmd
+}
+
+func (m createaccountmodel) updateFocusedInputs(focusedInputIndex int) (tea.Model, tea.Cmd) {
+	fi := focusedInputIndex
+	cmds := make([]tea.Cmd, len(m.inputs))
+	for i := 0; i < len(m.inputs); i++ {
+		if i == fi {
+			// Set focused state
+			cmds[i] = m.inputs[i].Focus()
+			m.inputs[i].PromptStyle = focusedStyle
+			m.inputs[i].TextStyle = focusedStyle
+			continue
+		}
+		// Remove focused state
+		m.inputs[i].Blur()
+		m.inputs[i].PromptStyle = noStyle
+		m.inputs[i].TextStyle = noStyle
+	}
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m *createaccountmodel) updateInputs(msg tea.Msg) tea.Cmd {
