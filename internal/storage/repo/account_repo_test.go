@@ -85,7 +85,17 @@ func TestGetAllUsers(t *testing.T) {
 
 	accs, err := r.GetAll()
 	is.NoErr(err)
-	is.Equal(len(accs), 1)
+	is.Equal(len(accs), 2)
+
+	is.NoErr(compareContentsWithExpected(r.DB, map[string][]byte{
+		"accounts":            {0, 0, 0, 0, 0, 0, 0, 100},
+		"accounts.email.0":    []byte("first@place.com"),
+		"accounts.nick.0":     []byte("First User"),
+		"accounts.password.0": []byte("wwqdwdqdqwdqd"),
+		"accounts.email.1":    []byte("second@place.com"),
+		"accounts.nick.1":     []byte("Second User"),
+		"accounts.password.1": []byte("gigioregioigr"),
+	}))
 }
 
 func insertContents(db storage.DB, cnts map[string][]byte) error {

@@ -52,32 +52,41 @@ func (r *Accounts) GetByID(rowID uint64) (models.Account, error) {
 }
 
 func (r *Accounts) GetAll() ([]models.Account, error) {
-	accounts := []models.Account{}
-	// acquire all entries for the type "Account"
-	// this basically means for every single struct field,
-	// return a list of entry types
-	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, models.Account{})
+	accounts := make([]models.Account, 1)
 
-	// For each entry type (each struct field on "Account") search using the
-	// prefix key for every stored value for that entry type. Each time we
-	// find a value that means that there is a full "Account" that we need to
-	// append to the accounts list.
+	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, accounts[0])
 	for _, ent := range blankEntries {
+		// iterate over all stored values for this entry
 		prefix := ent.PrefixKey()
 		r.DB.View(func(txn *badger.Txn) error {
 			it := txn.NewIterator(badger.DefaultIteratorOptions)
 			defer it.Close()
 
+			var rows uint64 = 0
 			for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
-				accounts = append(accounts, models.Account{})
-				// item := it.Item()
-				// key := item.Key()
-				// err := item.Value()
+				if rows >= uint64(len(accounts)) {
+					accounts = append(accounts, models.Account{
+						ID: rows,
+					})
+				}
+				item := it.Item()
+				ent.RowID = rows
+				if err := item.Value(func(val []byte) error {
+					ent.Data = val
+					return nil
+				}); err != nil {
+					return err
+				}
+				if err := storage.LoadEntry(&accounts[rows], ent); err != nil {
+					return err
+				}
+				rows++
 			}
 
 			return nil
 		})
 	}
+
 	return accounts, nil
 }
 

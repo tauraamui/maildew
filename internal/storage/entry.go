@@ -19,7 +19,7 @@ type Entry struct {
 }
 
 func (e Entry) PrefixKey() []byte {
-	return []byte(fmt.Sprintf("%s.%s", e.TableName, e.ColumnName))
+	return []byte(fmt.Sprintf("%s.%s.", e.TableName, e.ColumnName))
 }
 
 func (e Entry) Key() []byte {
