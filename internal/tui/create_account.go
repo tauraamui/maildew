@@ -84,52 +84,10 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var vpCmd tea.Cmd
 	m.viewport, vpCmd = m.viewport.Update(msg)
 
-	cmds := []tea.Cmd{vpCmd}
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "esc":
-			return m, tea.Quit
-
-		// Change cursor mode
-		case "ctrl+r":
-			m.cursorMode++
-			if m.cursorMode > textinput.CursorHide {
-				m.cursorMode = textinput.CursorBlink
-			}
-			cmds := make([]tea.Cmd, len(m.inputs))
-			for i := range m.inputs {
-				cmds[i] = m.inputs[i].SetCursorMode(m.cursorMode)
-			}
-			return m, tea.Batch(cmds...)
-
-		// Set focus to next input
-		case "tab", "shift+tab", "enter", "up", "down":
-			s := msg.String()
-
-			// Did the user press enter while the submit button was focused?
-			// If so, exit.
-			if s == "enter" && m.focusIndex == len(m.inputs) {
-				m.err = nil
-				cmds = append(cmds, createAccountCmd(m.inputs[0].Value(), m.inputs[1].Value(), m.inputs[2].Value()))
-				cmds = append(cmds, resetFormCmd())
-				return m, tea.Batch(cmds...)
-			}
-
-			// Cycle indexes
-			if s == "up" || s == "shift+tab" {
-				m.focusIndex--
-			} else {
-				m.focusIndex++
-			}
-
-			if m.focusIndex > len(m.inputs) {
-				m.focusIndex = 0
-			} else if m.focusIndex < 0 {
-				m.focusIndex = len(m.inputs)
-			}
-
-			return m, updateFocusedInputsCmd(m.focusIndex)
+		if captured, model, cmds := m.handleKeyMsg(msg); captured {
+			return model, cmds
 		}
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
@@ -147,10 +105,57 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		)
 	}
 
-	// Handle character input and blinking
-	cmd := m.updateInputs(msg)
+	return m, tea.Batch([]tea.Cmd{vpCmd, m.updateInputs(msg)}...)
+}
 
-	return m, cmd
+func (m createaccountmodel) handleKeyMsg(msg tea.KeyMsg) (bool, tea.Model, tea.Cmd) {
+	cmds := []tea.Cmd{}
+	switch msg.String() {
+	case "ctrl+c", "esc":
+		return true, m, tea.Quit
+
+	// Change cursor mode
+	case "ctrl+r":
+		m.cursorMode++
+		if m.cursorMode > textinput.CursorHide {
+			m.cursorMode = textinput.CursorBlink
+		}
+		cmds := make([]tea.Cmd, len(m.inputs))
+		for i := range m.inputs {
+			cmds[i] = m.inputs[i].SetCursorMode(m.cursorMode)
+		}
+		return true, m, tea.Batch(cmds...)
+
+	// Set focus to next input
+	case "tab", "shift+tab", "enter", "up", "down":
+		s := msg.String()
+
+		// Did the user press enter while the submit button was focused?
+		// If so, exit.
+		if s == "enter" && m.focusIndex == len(m.inputs) {
+			m.err = nil
+			cmds = append(cmds, createAccountCmd(m.inputs[0].Value(), m.inputs[1].Value(), m.inputs[2].Value()))
+			cmds = append(cmds, resetFormCmd())
+			return true, m, tea.Batch(cmds...)
+		}
+
+		// Cycle indexes
+		if s == "up" || s == "shift+tab" {
+			m.focusIndex--
+		} else {
+			m.focusIndex++
+		}
+
+		if m.focusIndex > len(m.inputs) {
+			m.focusIndex = 0
+		} else if m.focusIndex < 0 {
+			m.focusIndex = len(m.inputs)
+		}
+
+		return true, m, updateFocusedInputsCmd(m.focusIndex)
+	}
+
+	return false, m, nil
 }
 
 func (m createaccountmodel) handleCreateAccount(acc models.Account) (tea.Model, tea.Cmd) {
