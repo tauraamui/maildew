@@ -66,6 +66,28 @@ func TestGetUser(t *testing.T) {
 	is.Equal(acc.Password, "fefweiofeifwwef")
 }
 
+func TestGetAllUsers(t *testing.T) {
+	is := is.New(t)
+
+	r, err := resolveRepo()
+	is.NoErr(err)
+	defer r.Close()
+
+	is.NoErr(insertContents(r.DB, map[string][]byte{
+		"accounts":            {0, 0, 0, 0, 0, 0, 0, 100},
+		"accounts.email.0":    []byte("first@place.com"),
+		"accounts.nick.0":     []byte("First User"),
+		"accounts.password.0": []byte("wwqdwdqdqwdqd"),
+		"accounts.email.1":    []byte("second@place.com"),
+		"accounts.nick.1":     []byte("Second User"),
+		"accounts.password.1": []byte("gigioregioigr"),
+	}))
+
+	accs, err := r.GetAll()
+	is.NoErr(err)
+	is.Equal(len(accs), 1)
+}
+
 func insertContents(db storage.DB, cnts map[string][]byte) error {
 	return db.Update(func(txn *badger.Txn) error {
 		for k, v := range cnts {

@@ -37,7 +37,7 @@ func (r *Accounts) GetByID(rowID uint64) (models.Account, error) {
 	acc := models.Account{
 		ID: rowID,
 	}
-	blankEntries := storage.ConvertToBlankEntries(accountsTableName, rowID, acc)
+	blankEntries := storage.ConvertToBlankEntries(r.tableName(), rowID, acc)
 	for _, e := range blankEntries {
 		if err := storage.Get(r.DB, &e); err != nil {
 			return acc, err
@@ -52,24 +52,37 @@ func (r *Accounts) GetByID(rowID uint64) (models.Account, error) {
 }
 
 func (r *Accounts) GetAll() ([]models.Account, error) {
-	// func IterateKeys(db *badger.DB, prefix []byte) error {
-	// 	return db.View(func(txn *badger.Txn) error {
-	// 		it := txn.NewIterator(badger.DefaultIteratorOptions)
-	// 		defer it.Close()
-	// 		prefixIter := it.Seek(prefix)
+	accounts := []models.Account{}
+	// acquire all entries for the type "Account"
+	// this basically means for every single struct field,
+	// return a list of entry types
+	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, models.Account{})
 
-	// 		for prefixIter.ValidForPrefix(prefix) {
-	// 			item := prefixIter.Item()
-	// 			key := item.Key()
-	// 			fmt.Println(key)
-	// 			prefixIter.Next()
-	// 		}
+	// For each entry type (each struct field on "Account") search using the
+	// prefix key for every stored value for that entry type. Each time we
+	// find a value that means that there is a full "Account" that we need to
+	// append to the accounts list.
+	for _, ent := range blankEntries {
+		prefix := ent.PrefixKey()
+		r.DB.View(func(txn *badger.Txn) error {
+			it := txn.NewIterator(badger.DefaultIteratorOptions)
+			defer it.Close()
 
-	// 		return nil
-	// 	})
-	// }
+			for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+				accounts = append(accounts, models.Account{})
+				// item := it.Item()
+				// key := item.Key()
+				// err := item.Value()
+			}
 
-	return nil, nil
+			return nil
+		})
+	}
+	return accounts, nil
+}
+
+func (r *Accounts) tableName() string {
+	return accountsTableName
 }
 
 func (r *Accounts) nextRowID() (uint64, error) {
