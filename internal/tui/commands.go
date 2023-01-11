@@ -10,9 +10,9 @@ func createAccountCmd(nick, email, pass string) tea.Cmd {
 	}
 }
 
-func clearFieldsResetFormCmd() tea.Cmd {
+func resetFormCmd() tea.Cmd {
 	return func() tea.Msg {
-		return clearFieldsResetFormMsg{}
+		return resetFormMsg{}
 	}
 }
 

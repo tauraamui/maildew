@@ -21,8 +21,8 @@ type (
 	updateFocusedInputsMsg struct {
 		index int
 	}
-	clearFieldsResetFormMsg struct{}
-	authenticateUserMsg     struct{}
+	resetFormMsg        struct{}
+	authenticateUserMsg struct{}
 )
 
 // Model the entryui model definition

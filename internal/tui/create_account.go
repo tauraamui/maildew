@@ -112,7 +112,7 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if s == "enter" && m.focusIndex == len(m.inputs) {
 				m.err = nil
 				cmds = append(cmds, createAccountCmd(m.inputs[0].Value(), m.inputs[1].Value(), m.inputs[2].Value()))
-				cmds = append(cmds, clearFieldsResetFormCmd())
+				cmds = append(cmds, resetFormCmd())
 				return m, tea.Batch(cmds...)
 			}
 
@@ -134,25 +134,17 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
 	case updateFocusedInputsMsg:
-		return m.updateFocusedInputs(msg.index)
-	case clearFieldsResetFormMsg:
-		for i := 0; i < len(m.inputs); i++ {
-			m.inputs[i].SetValue("")
-		}
-		m.focusIndex = 0
-
-		return m, updateFocusedInputsCmd(m.focusIndex)
+		return m.handleUpdateFocusedInputs(msg.index)
+	case resetFormMsg:
+		return m.handleFormReset()
 	case createAccountMsg:
-		acc := models.Account{
-			Email:    msg.email,
-			Nick:     msg.nick,
-			Password: msg.password,
-		}
-		if err := m.ar.Save(&acc); err != nil {
-			m.err = err
-		} else {
-			m.success = fmt.Sprintf("account created, user ID: %d", acc.ID)
-		}
+		return m.handleCreateAccount(
+			models.Account{
+				Email:    msg.email,
+				Nick:     msg.nick,
+				Password: msg.password,
+			},
+		)
 	}
 
 	// Handle character input and blinking
@@ -161,7 +153,26 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m createaccountmodel) updateFocusedInputs(focusedInputIndex int) (tea.Model, tea.Cmd) {
+func (m createaccountmodel) handleCreateAccount(acc models.Account) (tea.Model, tea.Cmd) {
+	if err := m.ar.Save(&acc); err != nil {
+		m.err = err
+		return m, nil
+	}
+	m.success = fmt.Sprintf("account created, user ID: %d", acc.ID)
+
+	return m, nil
+}
+
+func (m createaccountmodel) handleFormReset() (tea.Model, tea.Cmd) {
+	for i := 0; i < len(m.inputs); i++ {
+		m.inputs[i].SetValue("")
+	}
+	m.focusIndex = 0
+
+	return m, updateFocusedInputsCmd(m.focusIndex)
+}
+
+func (m createaccountmodel) handleUpdateFocusedInputs(focusedInputIndex int) (tea.Model, tea.Cmd) {
 	fi := focusedInputIndex
 	cmds := make([]tea.Cmd, len(m.inputs))
 	for i := 0; i < len(m.inputs); i++ {
