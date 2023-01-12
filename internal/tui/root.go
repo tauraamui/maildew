@@ -34,8 +34,11 @@ func (m rootmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		default:
-			m.accounts, cmd = m.accounts.Update(msg)
-			cmds = append(cmds, cmd)
+			if m.focusIndex == 0 {
+				m.accounts, cmd = m.accounts.Update(msg)
+				cmds = append(cmds, cmd)
+				return m, tea.Batch(cmds...)
+			}
 			m.emails, cmd = m.emails.Update(msg)
 			cmds = append(cmds, cmd)
 		}

@@ -35,7 +35,7 @@ func newEmailListModel(er repo.Emails) emailsmodel {
 	populateRepoWithFake(&er)
 	items := newEmailsList(er)
 	m := emailsmodel{er: er, list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
-	m.list.Title = "test@account.com"
+	m.list.Title = "Emails"
 	return m
 }
 

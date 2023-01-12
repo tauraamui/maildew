@@ -16,7 +16,7 @@ type accountsmodel struct {
 func newAccountsListModel(ar repo.Accounts) accountsmodel {
 	items := newAccountsList(ar)
 	m := accountsmodel{ar: ar, list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
-	m.list.Title = "test@account.com"
+	m.list.Title = "Accounts"
 	return m
 }
 

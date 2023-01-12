@@ -58,6 +58,9 @@ func (m *Model) Init() tea.Cmd {
 // Update handle IO and commands
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case switchModeMsg:
+		m.mode = msg.mode
+		return m, nil
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
 	}
