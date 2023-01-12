@@ -1,8 +1,21 @@
 package tui
 
 import (
+	"strings"
+
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/tauraamui/maildew/internal/storage/repo"
+)
+
+var (
+	modelStyle = lipgloss.NewStyle().
+			Align(lipgloss.Center, lipgloss.Center).
+			BorderStyle(lipgloss.HiddenBorder())
+	focusedModelStyle = lipgloss.NewStyle().
+				Align(lipgloss.Center, lipgloss.Center).
+				BorderStyle(lipgloss.NormalBorder()).
+				BorderForeground(lipgloss.Color("69"))
 )
 
 type rootmodel struct {
@@ -33,12 +46,16 @@ func (m rootmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
-		default:
-			if m.focusIndex == 0 {
-				m.accounts, cmd = m.accounts.Update(msg)
-				cmds = append(cmds, cmd)
-				return m, tea.Batch(cmds...)
+		case "tab":
+			m.focusIndex++
+			if m.focusIndex > 1 {
+				m.focusIndex = 0
 			}
+		}
+		if m.focusIndex == 0 {
+			m.accounts, cmd = m.accounts.Update(msg)
+			cmds = append(cmds, cmd)
+		} else {
 			m.emails, cmd = m.emails.Update(msg)
 			cmds = append(cmds, cmd)
 		}
@@ -48,5 +65,11 @@ func (m rootmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m rootmodel) View() string {
-	return m.accounts.View() + m.emails.View()
+	var b strings.Builder
+	if m.focusIndex == 0 {
+		b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, focusedModelStyle.Render(m.accounts.View()), modelStyle.Render(m.emails.View())))
+	} else {
+		b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, modelStyle.Render(m.accounts.View()), focusedModelStyle.Render(m.emails.View())))
+	}
+	return b.String()
 }

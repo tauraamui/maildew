@@ -34,9 +34,6 @@ func newAccountsList(ar repo.Accounts) []list.Item {
 }
 
 func (m accountsmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if len(m.list.Items()) == 0 {
-		return m, switchModeCmd(createAccountMode)
-	}
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:

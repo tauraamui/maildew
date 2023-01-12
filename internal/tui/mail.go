@@ -31,18 +31,18 @@ type (
 
 // Model the entryui model definition
 type Model struct {
-	mode          mode
-	root          tea.Model
-	createAccount tea.Model
-	windowSize    tea.WindowSizeMsg
-	quitting      bool
+	mode mode
+	root tea.Model
+	// createAccount tea.Model
+	windowSize tea.WindowSizeMsg
+	quitting   bool
 }
 
 // InitProject initialize the mailui model for your program
 func InitMail(ar repo.Accounts, er repo.Emails) tea.Model {
 	m := Model{
-		root:          newRootModel(ar, er),
-		createAccount: newCreateAccountModel(ar),
+		root: newRootModel(ar, er),
+		//	createAccount: newCreateAccountModel(ar),
 	}
 	return &m
 }
@@ -68,7 +68,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch m.mode {
 	case createAccountMode:
-		m.createAccount, cmd = m.createAccount.Update(msg)
+		//	m.createAccount, cmd = m.createAccount.Update(msg)
 		return m, cmd
 	case rootMode:
 		m.root, cmd = m.root.Update(msg)
@@ -86,7 +86,7 @@ func (m Model) View() string {
 
 	switch m.mode {
 	case createAccountMode:
-		return m.createAccount.View()
+		//		return m.createAccount.View()
 	case rootMode:
 		return m.root.View()
 	}

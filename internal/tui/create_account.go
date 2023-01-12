@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/tauraamui/maildew/internal/storage/models"
@@ -36,7 +35,6 @@ type createaccountmodel struct {
 	ar         repo.Accounts
 	focusIndex int
 	windowSize tea.WindowSizeMsg
-	viewport   viewport.Model
 	inputs     []textinput.Model
 	cursorMode textinput.CursorMode
 	success    string
@@ -82,7 +80,6 @@ func (m createaccountmodel) Init() tea.Cmd {
 
 func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var vpCmd tea.Cmd
-	m.viewport, vpCmd = m.viewport.Update(msg)
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
