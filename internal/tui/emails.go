@@ -1,20 +1,32 @@
 package tui
 
 import (
+	"fmt"
+
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/tauraamui/maildew/internal/storage/models"
 	"github.com/tauraamui/maildew/internal/storage/repo"
 )
 
 type emailsmodel struct {
 	er         repo.Emails
 	windowSize tea.WindowSizeMsg
+	list       list.Model
 }
 
-func newListModel() emailsmodel {
-	return emailsmodel{}
+func populateRepoWithFake(er *repo.Emails) {
+	for i := 0; i < 100; i++ {
+		er.Save(&models.Email{Subject: fmt.Sprintf("Fake email %d", i)})
+	}
+}
+
+func newEmailListModel(er repo.Emails) emailsmodel {
+	return emailsmodel{er: er}
 }
 
 func (m emailsmodel) Init() tea.Cmd {
+	populateRepoWithFake(&m.er)
 	return nil
 }
 

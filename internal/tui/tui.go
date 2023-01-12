@@ -11,7 +11,7 @@ import (
 )
 
 // StartTea the entry point for the UI. Initializes the model.
-func StartTea(cfg configdef.Values, ur repo.Accounts) {
+func StartTea(cfg configdef.Values, ar repo.Accounts, er repo.Emails) {
 	if cfg.Debug {
 		if f, err := tea.LogToFile("debug.log", "debug"); err != nil {
 			fmt.Println("Couldn't open a file for logging:", err)
@@ -26,7 +26,7 @@ func StartTea(cfg configdef.Values, ur repo.Accounts) {
 		}
 	}
 
-	p := tea.NewProgram(InitMail(ur), tea.WithAltScreen())
+	p := tea.NewProgram(InitMail(ar, er), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)

@@ -10,8 +10,8 @@ type mode int
 
 const (
 	auth mode = iota
-	createAccount
-	list
+	createAccountMode
+	emailsListMode
 )
 
 type (
@@ -30,29 +30,28 @@ type Model struct {
 	ar            repo.Accounts
 	mode          mode
 	createAccount tea.Model
+	emailList     tea.Model
 	windowSize    tea.WindowSizeMsg
 	auth          tea.Model
-	list          tea.Model
 	quitting      bool
 }
 
 // InitProject initialize the mailui model for your program
-func InitMail(ar repo.Accounts) tea.Model {
+func InitMail(ar repo.Accounts, er repo.Emails) tea.Model {
 	m := Model{
 		ar:            ar,
-		mode:          list,
 		createAccount: newCreateAccountModel(ar),
-		list:          newListModel(),
+		emailList:     newEmailListModel(er),
 	}
 	return &m
 }
 
 // Init run any intial IO on program start
 func (m *Model) Init() tea.Cmd {
-	m.mode = createAccount
+	m.mode = createAccountMode
 	// accs, _ := m.ar.GetAccounts()
 	// if len(accs) == 0 {
-	// 	m.mode = createAccount
+	// 	m.mode = createAccountMode
 	// }
 	return nil
 }
@@ -62,17 +61,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
-	case authenticateUserMsg:
-		m.mode = list
 	}
 
 	var cmd tea.Cmd
 	switch m.mode {
-	case createAccount:
+	case createAccountMode:
 		m.createAccount, cmd = m.createAccount.Update(msg)
 		return m, cmd
-	case list:
-		m.list, cmd = m.list.Update(msg)
+	case emailsListMode:
+		// m.list, cmd = m.list.Update(msg)
 		return m, cmd
 	}
 
@@ -86,10 +83,11 @@ func (m Model) View() string {
 	}
 
 	switch m.mode {
-	case createAccount:
+	case createAccountMode:
 		return m.createAccount.View()
-	case list:
-		return m.list.View()
+	case emailsListMode:
+		// return m.list.View()
+		return ""
 	}
 
 	return "Nothing"

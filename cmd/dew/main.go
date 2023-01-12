@@ -32,7 +32,10 @@ func main() {
 	ar := repo.Accounts{DB: db}
 	defer ar.Close()
 
-	tui.StartTea(cfg, ar)
+	er := repo.Emails{DB: db}
+	defer er.Close()
+
+	tui.StartTea(cfg, ar, er)
 
 	db.DumpToStdout()
 }
