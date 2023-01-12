@@ -10,6 +10,7 @@ type mode int
 
 const (
 	auth mode = iota
+	rootMode
 	createAccountMode
 	emailsListMode
 )
@@ -27,7 +28,7 @@ type (
 
 // Model the entryui model definition
 type Model struct {
-	ar            repo.Accounts
+	root          tea.Model
 	mode          mode
 	createAccount tea.Model
 	emailList     tea.Model
@@ -39,9 +40,8 @@ type Model struct {
 // InitProject initialize the mailui model for your program
 func InitMail(ar repo.Accounts, er repo.Emails) tea.Model {
 	m := Model{
-		ar:            ar,
+		root:          newRootModel(ar, er),
 		createAccount: newCreateAccountModel(ar),
-		emailList:     newEmailListModel(er),
 	}
 	return &m
 }
@@ -49,7 +49,7 @@ func InitMail(ar repo.Accounts, er repo.Emails) tea.Model {
 // Init run any intial IO on program start
 func (m *Model) Init() tea.Cmd {
 	// m.mode = createAccountMode
-	m.mode = emailsListMode
+	m.mode = rootMode
 
 	return nil
 }
@@ -66,8 +66,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case createAccountMode:
 		m.createAccount, cmd = m.createAccount.Update(msg)
 		return m, cmd
-	case emailsListMode:
-		m.emailList, cmd = m.emailList.Update(msg)
+	case rootMode:
+		m.root, cmd = m.root.Update(msg)
 		return m, cmd
 	}
 
@@ -83,8 +83,8 @@ func (m Model) View() string {
 	switch m.mode {
 	case createAccountMode:
 		return m.createAccount.View()
-	case emailsListMode:
-		return m.emailList.View()
+	case rootMode:
+		return m.root.View()
 	}
 
 	return "Nothing"
