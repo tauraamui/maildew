@@ -52,13 +52,14 @@ func (m rootmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.focusIndex = 0
 			}
 		}
-		if m.focusIndex == 0 {
-			m.accounts, cmd = m.accounts.Update(msg)
-			cmds = append(cmds, cmd)
-		} else {
-			m.emails, cmd = m.emails.Update(msg)
-			cmds = append(cmds, cmd)
-		}
+	}
+
+	if m.focusIndex == 0 {
+		m.accounts, cmd = m.accounts.Update(msg)
+		cmds = append(cmds, cmd)
+	} else {
+		m.emails, cmd = m.emails.Update(msg)
+		cmds = append(cmds, cmd)
 	}
 
 	return m, tea.Batch(cmds...)
