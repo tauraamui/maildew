@@ -1,11 +1,13 @@
 package tui
 
 import (
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/tauraamui/maildew/internal/storage/repo"
 )
 
 type emailsmodel struct {
+	er         repo.Emails
+	windowSize tea.WindowSizeMsg
 }
 
 func newListModel() emailsmodel {
@@ -13,11 +15,13 @@ func newListModel() emailsmodel {
 }
 
 func (m emailsmodel) Init() tea.Cmd {
-	return textinput.Blink
+	return nil
 }
 
 func (m emailsmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.windowSize = msg
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "esc":
