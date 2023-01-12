@@ -37,10 +37,10 @@ func TestSaveUser(t *testing.T) {
 	is.NoErr(r.Save(&user))
 
 	is.NoErr(compareContentsWithExpected(r.DB, map[string][]byte{
-		"accounts":            {0, 0, 0, 0, 0, 0, 0, 100},
-		"accounts.email.0":    []byte("test@place.com"),
-		"accounts.nick.0":     []byte("Test User"),
-		"accounts.password.0": []byte("fefweiofeifwwef"),
+		"accounts":              {0, 0, 0, 0, 0, 0, 0, 100},
+		"accounts.email.0.0":    []byte("test@place.com"),
+		"accounts.nick.0.0":     []byte("Test User"),
+		"accounts.password.0.0": []byte("fefweiofeifwwef"),
 	}))
 }
 
@@ -52,10 +52,10 @@ func TestGetUser(t *testing.T) {
 	defer r.Close()
 
 	is.NoErr(insertContents(r.DB, map[string][]byte{
-		"accounts":            {0, 0, 0, 0, 0, 0, 0, 100},
-		"accounts.email.0":    []byte("test@place.com"),
-		"accounts.nick.0":     []byte("Test User"),
-		"accounts.password.0": []byte("fefweiofeifwwef"),
+		"accounts":              {0, 0, 0, 0, 0, 0, 0, 100},
+		"accounts.email.0.0":    []byte("test@place.com"),
+		"accounts.nick.0.0":     []byte("Test User"),
+		"accounts.password.0.0": []byte("fefweiofeifwwef"),
 	}))
 
 	acc, err := r.GetByID(0)
@@ -74,13 +74,13 @@ func TestGetAllUsers(t *testing.T) {
 	defer r.Close()
 
 	is.NoErr(insertContents(r.DB, map[string][]byte{
-		"accounts":            {0, 0, 0, 0, 0, 0, 0, 100},
-		"accounts.email.0":    []byte("first@place.com"),
-		"accounts.nick.0":     []byte("First User"),
-		"accounts.password.0": []byte("wwqdwdqdqwdqd"),
-		"accounts.email.1":    []byte("second@place.com"),
-		"accounts.nick.1":     []byte("Second User"),
-		"accounts.password.1": []byte("gigioregioigr"),
+		"accounts":              {0, 0, 0, 0, 0, 0, 0, 100},
+		"accounts.email.0.0":    []byte("first@place.com"),
+		"accounts.nick.0.0":     []byte("First User"),
+		"accounts.password.0.0": []byte("wwqdwdqdqwdqd"),
+		"accounts.email.0.1":    []byte("second@place.com"),
+		"accounts.nick.0.1":     []byte("Second User"),
+		"accounts.password.0.1": []byte("gigioregioigr"),
 	}))
 
 	accs, err := r.GetAll()

@@ -29,10 +29,10 @@ func TestSaveEmail(t *testing.T) {
 		Subject: "Fake email",
 	}
 
-	is.NoErr(r.Save(&email))
+	is.NoErr(r.Save(0, &email))
 
 	is.NoErr(compareContentsWithExpected(r.DB, map[string][]byte{
-		"emails":           {0, 0, 0, 0, 0, 0, 0, 100},
-		"emails.subject.0": []byte("Fake email"),
+		"emails":             {0, 0, 0, 0, 0, 0, 0, 100},
+		"emails.subject.0.0": []byte("Fake email"),
 	}))
 }

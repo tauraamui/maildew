@@ -15,20 +15,20 @@ type Emails struct {
 	seq *badger.Sequence
 }
 
-func (r *Emails) Save(user *models.Email) error {
+func (r *Emails) Save(accountID uint64, email *models.Email) error {
 	rowID, err := r.nextRowID()
 	if err != nil {
 		return err
 	}
 
-	entries := storage.ConvertToEntries(emailsTableName, rowID, *user)
+	entries := storage.ConvertToEntries(emailsTableName, accountID, rowID, *email)
 	for _, e := range entries {
 		if err := storage.Store(r.DB, e); err != nil {
 			return err
 		}
 	}
 
-	user.ID = rowID
+	email.ID = rowID
 
 	return nil
 }
@@ -37,7 +37,7 @@ func (r *Emails) GetByID(rowID uint64) (models.Email, error) {
 	acc := models.Email{
 		ID: rowID,
 	}
-	blankEntries := storage.ConvertToBlankEntries(r.tableName(), rowID, acc)
+	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, rowID, acc)
 	for _, e := range blankEntries {
 		if err := storage.Get(r.DB, &e); err != nil {
 			return acc, err
@@ -55,10 +55,10 @@ func (r *Emails) GetByID(rowID uint64) (models.Email, error) {
 // of these repos are identical thanks to using the storage backend
 // so should move each of these into using Go generics rather than
 // copying them for each type.
-func (r *Emails) GetAll() ([]models.Email, error) {
+func (r *Emails) GetAll(accountID uint64) ([]models.Email, error) {
 	emails := make([]models.Email, 1)
 
-	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, emails[0])
+	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, 0, emails[0])
 	for _, ent := range blankEntries {
 		// iterate over all stored values for this entry
 		prefix := ent.PrefixKey()

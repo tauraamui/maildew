@@ -20,8 +20,14 @@ type emailsmodel struct {
 }
 
 func populateRepoWithFake(er *repo.Emails) {
+	var accID uint64 = 0
 	for i := 0; i < 100; i++ {
-		er.Save(&models.Email{Subject: randomString(5, 20)})
+		if i%2 == 0 {
+			accID = 1
+		} else {
+			accID = 0
+		}
+		er.Save(accID, &models.Email{Subject: randomString(5, 20)})
 	}
 }
 
@@ -38,7 +44,7 @@ func (m emailsmodel) Init() tea.Cmd {
 }
 
 func newEmailsList(er repo.Emails) []list.Item {
-	emails, err := er.GetAll()
+	emails, err := er.GetAll(0)
 	if err != nil {
 		panic(err)
 	}

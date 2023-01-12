@@ -53,7 +53,7 @@ func TestConvertToEntries(t *testing.T) {
 		Bar: 4,
 	}
 
-	e := storage.ConvertToEntries("test", 0, source)
+	e := storage.ConvertToEntries("test", 0, 0, source)
 	is.Equal(len(e), 2)
 
 	is = is.NewRelaxed(t)

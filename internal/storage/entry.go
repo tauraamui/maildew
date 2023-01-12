@@ -14,16 +14,17 @@ import (
 type Entry struct {
 	TableName  string
 	ColumnName string
+	OwnerID    uint64
 	RowID      uint64
 	Data       []byte
 }
 
 func (e Entry) PrefixKey() []byte {
-	return []byte(fmt.Sprintf("%s.%s.", e.TableName, e.ColumnName))
+	return []byte(fmt.Sprintf("%s.%s.%d", e.TableName, e.ColumnName, e.OwnerID))
 }
 
 func (e Entry) Key() []byte {
-	return []byte(fmt.Sprintf("%s.%s.%d", e.TableName, e.ColumnName, e.RowID))
+	return []byte(fmt.Sprintf("%s.%s.%d.%d", e.TableName, e.ColumnName, e.OwnerID, e.RowID))
 }
 
 func Store(db DB, e Entry) error {
@@ -50,14 +51,14 @@ func Get(db DB, e *Entry) error {
 	})
 }
 
-func ConvertToBlankEntries(tableName string, rowID uint64, x interface{}) []Entry {
+func ConvertToBlankEntries(tableName string, ownerID, rowID uint64, x interface{}) []Entry {
 	v := reflect.ValueOf(x)
-	return convertToEntries(tableName, rowID, v, false)
+	return convertToEntries(tableName, ownerID, rowID, v, false)
 }
 
-func ConvertToEntries(tableName string, rowID uint64, x interface{}) []Entry {
+func ConvertToEntries(tableName string, ownerID, rowID uint64, x interface{}) []Entry {
 	v := reflect.ValueOf(x)
-	return convertToEntries(tableName, rowID, v, true)
+	return convertToEntries(tableName, ownerID, rowID, v, true)
 }
 
 func LoadEntry(s interface{}, entry Entry) error {
@@ -89,7 +90,7 @@ func LoadEntries(s interface{}, entries []Entry) error {
 	return nil
 }
 
-func convertToEntries(tableName string, rowID uint64, v reflect.Value, includeData bool) []Entry {
+func convertToEntries(tableName string, ownerID, rowID uint64, v reflect.Value, includeData bool) []Entry {
 	entries := []Entry{}
 
 	for i := 0; i < v.NumField(); i++ {
@@ -104,6 +105,7 @@ func convertToEntries(tableName string, rowID uint64, v reflect.Value, includeDa
 		e := Entry{
 			TableName:  tableName,
 			ColumnName: strings.ToLower(f.Name),
+			OwnerID:    ownerID,
 			RowID:      rowID,
 		}
 

@@ -21,7 +21,7 @@ func (r *Accounts) Save(user *models.Account) error {
 		return err
 	}
 
-	entries := storage.ConvertToEntries(accountsTableName, rowID, *user)
+	entries := storage.ConvertToEntries(accountsTableName, 0, rowID, *user)
 	for _, e := range entries {
 		if err := storage.Store(r.DB, e); err != nil {
 			return err
@@ -37,7 +37,7 @@ func (r *Accounts) GetByID(rowID uint64) (models.Account, error) {
 	acc := models.Account{
 		ID: rowID,
 	}
-	blankEntries := storage.ConvertToBlankEntries(r.tableName(), rowID, acc)
+	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, rowID, acc)
 	for _, e := range blankEntries {
 		if err := storage.Get(r.DB, &e); err != nil {
 			return acc, err
@@ -54,7 +54,7 @@ func (r *Accounts) GetByID(rowID uint64) (models.Account, error) {
 func (r *Accounts) GetAll() ([]models.Account, error) {
 	accounts := make([]models.Account, 1)
 
-	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, accounts[0])
+	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, 0, accounts[0])
 	for _, ent := range blankEntries {
 		// iterate over all stored values for this entry
 		prefix := ent.PrefixKey()
