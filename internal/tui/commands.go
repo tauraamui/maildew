@@ -10,6 +10,12 @@ func createAccountCmd(nick, email, pass string) tea.Cmd {
 	}
 }
 
+func switchModeCmd(m mode) tea.Cmd {
+	return func() tea.Msg {
+		return switchModeMsg{m}
+	}
+}
+
 func resetFormCmd() tea.Cmd {
 	return func() tea.Msg {
 		return resetFormMsg{}

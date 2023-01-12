@@ -165,7 +165,7 @@ func (m createaccountmodel) handleCreateAccount(acc models.Account) (tea.Model, 
 	}
 	m.success = fmt.Sprintf("account created, user ID: %d", acc.ID)
 
-	return m, nil
+	return m, switchModeCmd(rootMode)
 }
 
 func (m createaccountmodel) handleFormReset() (tea.Model, tea.Cmd) {

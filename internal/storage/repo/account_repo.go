@@ -52,9 +52,9 @@ func (r *Accounts) GetByID(rowID uint64) (models.Account, error) {
 }
 
 func (r *Accounts) GetAll() ([]models.Account, error) {
-	accounts := make([]models.Account, 1)
+	accounts := []models.Account{}
 
-	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, 0, accounts[0])
+	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, 0, models.Account{})
 	for _, ent := range blankEntries {
 		// iterate over all stored values for this entry
 		prefix := ent.PrefixKey()
@@ -64,7 +64,8 @@ func (r *Accounts) GetAll() ([]models.Account, error) {
 
 			var rows uint64 = 0
 			for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
-				if rows >= uint64(len(accounts)) {
+				// be very clear with our append conditions
+				if len(accounts) == 0 || rows >= uint64(len(accounts)) {
 					accounts = append(accounts, models.Account{
 						ID: rows,
 					})

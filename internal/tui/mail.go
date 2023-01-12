@@ -22,18 +22,19 @@ type (
 	updateFocusedInputsMsg struct {
 		index int
 	}
+	switchModeMsg struct {
+		mode mode
+	}
 	resetFormMsg        struct{}
 	authenticateUserMsg struct{}
 )
 
 // Model the entryui model definition
 type Model struct {
-	root          tea.Model
 	mode          mode
+	root          tea.Model
 	createAccount tea.Model
-	emailList     tea.Model
 	windowSize    tea.WindowSizeMsg
-	auth          tea.Model
 	quitting      bool
 }
 
@@ -87,5 +88,6 @@ func (m Model) View() string {
 		return m.root.View()
 	}
 
+	// should probably just panic here
 	return "Nothing"
 }
