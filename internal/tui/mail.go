@@ -48,11 +48,9 @@ func InitMail(ar repo.Accounts, er repo.Emails) tea.Model {
 
 // Init run any intial IO on program start
 func (m *Model) Init() tea.Cmd {
-	m.mode = createAccountMode
-	// accs, _ := m.ar.GetAccounts()
-	// if len(accs) == 0 {
-	// 	m.mode = createAccountMode
-	// }
+	// m.mode = createAccountMode
+	m.mode = emailsListMode
+
 	return nil
 }
 
@@ -69,7 +67,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.createAccount, cmd = m.createAccount.Update(msg)
 		return m, cmd
 	case emailsListMode:
-		// m.list, cmd = m.list.Update(msg)
+		m.emailList, cmd = m.emailList.Update(msg)
 		return m, cmd
 	}
 
@@ -86,8 +84,7 @@ func (m Model) View() string {
 	case createAccountMode:
 		return m.createAccount.View()
 	case emailsListMode:
-		// return m.list.View()
-		return ""
+		return m.emailList.View()
 	}
 
 	return "Nothing"
