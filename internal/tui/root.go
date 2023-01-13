@@ -42,6 +42,12 @@ func (m rootmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
+		m.accounts, cmd = m.accounts.Update(msg)
+		cmds = append(cmds, cmd)
+
+		m.emails, cmd = m.emails.Update(msg)
+		cmds = append(cmds, cmd)
+		return m, tea.Batch(cmds...)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
