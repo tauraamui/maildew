@@ -14,6 +14,16 @@ type accountsmodel struct {
 }
 
 func newAccountsListModel(ar repo.Accounts) accountsmodel {
+	ar.Save(&models.Account{
+		Nick:     "First Test Account",
+		Email:    "firsttest@account.com",
+		Password: "jiejfofowif",
+	})
+	ar.Save(&models.Account{
+		Nick:     "Second Test Account",
+		Email:    "secondtest@account.com",
+		Password: "grejgioregoirjgi",
+	})
 	items := newAccountsList(ar)
 	m := accountsmodel{ar: ar, list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
 	m.list.Title = "Accounts"
