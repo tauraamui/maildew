@@ -11,7 +11,7 @@ import (
 	"github.com/tauraamui/maildew/internal/storage/repo"
 )
 
-var marginStyle = lipgloss.NewStyle().Margin(1, 2)
+var marginStyle = lipgloss.NewStyle().Margin(1, 1, 1, 1)
 
 type emailsmodel struct {
 	er         repo.Emails
