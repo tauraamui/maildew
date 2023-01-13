@@ -15,20 +15,6 @@ const (
 	emailsListMode
 )
 
-type (
-	createAccountMsg struct {
-		nick, email, password string
-	}
-	updateFocusedInputsMsg struct {
-		index int
-	}
-	switchModeMsg struct {
-		mode mode
-	}
-	resetFormMsg        struct{}
-	authenticateUserMsg struct{}
-)
-
 // Model the entryui model definition
 type Model struct {
 	mode mode
