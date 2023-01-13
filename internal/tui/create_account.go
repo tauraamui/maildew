@@ -79,8 +79,7 @@ func (m createaccountmodel) Init() tea.Cmd {
 }
 
 func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var vpCmd tea.Cmd
-
+	cmds := []tea.Cmd{}
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if captured, model, cmds := m.handleKeyMsg(msg); captured {
@@ -92,17 +91,16 @@ func (m createaccountmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleUpdateFocusedInputs(msg.index)
 	case resetFormMsg:
 		return m.handleFormReset()
-	case createAccountMsg:
-		return m.handleCreateAccount(
-			models.Account{
-				Email:    msg.email,
-				Nick:     msg.nick,
-				Password: msg.password,
-			},
-		)
+	case errMsg:
+		m.err = msg.err
+		cmds = append(cmds, m.clearInputs())
+	case successMsg:
+		m.success = msg.msg
+		cmds = append(cmds, m.clearInputs())
 	}
 
-	return m, tea.Batch([]tea.Cmd{vpCmd, m.updateInputs(msg)}...)
+	cmds = append(cmds, m.updateInputs(msg))
+	return m, tea.Batch(cmds...)
 }
 
 func (m createaccountmodel) handleKeyMsg(msg tea.KeyMsg) (bool, tea.Model, tea.Cmd) {
@@ -131,8 +129,9 @@ func (m createaccountmodel) handleKeyMsg(msg tea.KeyMsg) (bool, tea.Model, tea.C
 		// If so, exit.
 		if s == "enter" && m.focusIndex == len(m.inputs) {
 			m.err = nil
-			cmds = append(cmds, createAccountCmd(m.inputs[0].Value(), m.inputs[1].Value(), m.inputs[2].Value()))
-			cmds = append(cmds, resetFormCmd())
+
+			cmds = append(cmds, createAccount(m.ar, m.inputs[0].Value(), m.inputs[1].Value(), m.inputs[2].Value()))
+			// cmds = append(cmds, resetFormCmd())
 			return true, m, tea.Batch(cmds...)
 		}
 
@@ -155,14 +154,28 @@ func (m createaccountmodel) handleKeyMsg(msg tea.KeyMsg) (bool, tea.Model, tea.C
 	return false, m, nil
 }
 
-func (m createaccountmodel) handleCreateAccount(acc models.Account) (tea.Model, tea.Cmd) {
-	if err := m.ar.Save(&acc); err != nil {
-		m.err = err
-		return m, nil
-	}
-	m.success = fmt.Sprintf("account created, user ID: %d", acc.ID)
+type (
+	errMsg     struct{ err error }
+	successMsg struct{ msg string }
+)
 
-	return m, switchModeCmd(rootMode)
+func createAccount(ar repo.Accounts, nick, email, pass string) tea.Cmd {
+	return func() tea.Msg {
+		acc := models.Account{Nick: nick, Email: email, Password: pass}
+		if err := ar.Save(&acc); err != nil {
+			return errMsg{err}
+		}
+		return successMsg{fmt.Sprintf("account created, user ID: %d", acc.ID)}
+	}
+}
+
+func (m createaccountmodel) clearInputs() tea.Cmd {
+	return func() tea.Msg {
+		for i := 0; i < len(m.inputs); i++ {
+			m.inputs[i].SetValue("")
+		}
+		return nil
+	}
 }
 
 func (m createaccountmodel) handleFormReset() (tea.Model, tea.Cmd) {
