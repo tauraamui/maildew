@@ -57,10 +57,11 @@ func (m rootmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.focusIndex == 0 {
 		m.accounts, cmd = m.accounts.Update(msg)
 		cmds = append(cmds, cmd)
-	} else {
-		m.emails, cmd = m.emails.Update(msg)
-		cmds = append(cmds, cmd)
+		return m, tea.Batch(cmds...)
 	}
+
+	m.emails, cmd = m.emails.Update(msg)
+	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
 }
@@ -69,8 +70,8 @@ func (m rootmodel) View() string {
 	var b strings.Builder
 	if m.focusIndex == 0 {
 		b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, focusedModelStyle.Render(m.accounts.View()), modelStyle.Render(m.emails.View())))
-	} else {
-		b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, modelStyle.Render(m.accounts.View()), focusedModelStyle.Render(m.emails.View())))
+		return b.String()
 	}
+	b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, modelStyle.Render(m.accounts.View()), focusedModelStyle.Render(m.emails.View())))
 	return b.String()
 }
