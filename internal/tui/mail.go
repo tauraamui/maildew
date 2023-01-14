@@ -6,28 +6,27 @@ import (
 	// account "github.com/tauraamui/maildew/internal/storage"
 )
 
-type mode int
-
-const (
-	auth mode = iota
-	rootMode
-	createAccountMode
-	emailsListMode
+type (
+	mode   int
+	status int
 )
 
-// Model the entryui model definition
+const (
+	rootStatus status = iota
+	createAccountStatus
+)
+
 type Model struct {
-	mode          mode
+	status        status
 	root          tea.Model
 	createAccount tea.Model
 	windowSize    tea.WindowSizeMsg
 	quitting      bool
 }
 
-// InitProject initialize the mailui model for your program
 func InitMail(ar repo.Accounts, er repo.Emails) tea.Model {
 	m := Model{
-		// root: newRootModel(ar, er),
+		root:          newRootModel(ar, er),
 		createAccount: newCreateAccountModel(ar),
 	}
 	return &m
@@ -35,8 +34,7 @@ func InitMail(ar repo.Accounts, er repo.Emails) tea.Model {
 
 // Init run any intial IO on program start
 func (m *Model) Init() tea.Cmd {
-	m.mode = createAccountMode
-	// m.mode = rootMode
+	m.status = rootStatus
 
 	return nil
 }
@@ -44,24 +42,22 @@ func (m *Model) Init() tea.Cmd {
 // Update handle IO and commands
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case switchModeMsg:
-		m.mode = msg.mode
-		return m, nil
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
 	}
 
 	var cmd tea.Cmd
-	switch m.mode {
-	case createAccountMode:
-		m.createAccount, cmd = m.createAccount.Update(msg)
-		return m, cmd
-	case rootMode:
+	cmds := []tea.Cmd{}
+	switch m.status {
+	case rootStatus:
 		m.root, cmd = m.root.Update(msg)
-		return m, cmd
+		cmds = append(cmds, cmd)
+	case createAccountStatus:
+		m.createAccount, cmd = m.createAccount.Update(msg)
+		cmds = append(cmds, cmd)
 	}
 
-	return m, nil
+	return m, tea.Batch(cmds...)
 }
 
 // View return the text UI to be output to the terminal
@@ -70,13 +66,13 @@ func (m Model) View() string {
 		return ""
 	}
 
-	switch m.mode {
-	case createAccountMode:
-		return m.createAccount.View()
-	case rootMode:
+	switch m.status {
+	case rootStatus:
 		return m.root.View()
+	case createAccountStatus:
+		return m.createAccount.View()
 	}
 
 	// should probably just panic here
-	return "Nothing"
+	return "A problem or bug is occurring, this text should never appear... Check the logs, or something."
 }
