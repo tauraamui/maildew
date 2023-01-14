@@ -19,16 +19,16 @@ var (
 )
 
 type rootmodel struct {
-	windowSize tea.WindowSizeMsg
-	focusIndex int
-	accounts   tea.Model
-	emails     tea.Model
+	windowSize   tea.WindowSizeMsg
+	focusIndex   int
+	accountsList tea.Model
+	emailsList   tea.Model
 }
 
 func newRootModel(ar repo.Accounts, er repo.Emails) rootmodel {
 	return rootmodel{
-		accounts: newAccountsListModel(ar),
-		emails:   newEmailListModel(er),
+		accountsList: newAccountsListModel(ar),
+		emailsList:   newEmailListModel(er),
 	}
 }
 
@@ -42,10 +42,10 @@ func (m rootmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
-		m.accounts, cmd = m.accounts.Update(msg)
+		m.accountsList, cmd = m.accountsList.Update(msg)
 		cmds = append(cmds, cmd)
 
-		m.emails, cmd = m.emails.Update(msg)
+		m.emailsList, cmd = m.emailsList.Update(msg)
 		cmds = append(cmds, cmd)
 		return m, tea.Batch(cmds...)
 	case tea.KeyMsg:
@@ -61,12 +61,12 @@ func (m rootmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	if m.focusIndex == 0 {
-		m.accounts, cmd = m.accounts.Update(msg)
+		m.accountsList, cmd = m.accountsList.Update(msg)
 		cmds = append(cmds, cmd)
 		return m, tea.Batch(cmds...)
 	}
 
-	m.emails, cmd = m.emails.Update(msg)
+	m.emailsList, cmd = m.emailsList.Update(msg)
 	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
@@ -75,9 +75,9 @@ func (m rootmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m rootmodel) View() string {
 	var b strings.Builder
 	if m.focusIndex == 0 {
-		b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, focusedModelStyle.Render(m.accounts.View()), modelStyle.Render(m.emails.View())))
+		b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, focusedModelStyle.Render(m.accountsList.View()), modelStyle.Render(m.emailsList.View())))
 		return b.String()
 	}
-	b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, modelStyle.Render(m.accounts.View()), focusedModelStyle.Render(m.emails.View())))
+	b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, modelStyle.Render(m.accountsList.View()), focusedModelStyle.Render(m.emailsList.View())))
 	return b.String()
 }
