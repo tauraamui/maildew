@@ -59,7 +59,7 @@ func (m rootmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "tab":
-			return m, m.toggleFocus()
+			return m, m.toggleFocus
 		}
 	case toggleFocusMsg:
 		m.status = msg.focus
@@ -79,14 +79,12 @@ func (m rootmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 type toggleFocusMsg struct{ focus focusStatus }
 
-func (m rootmodel) toggleFocus() tea.Cmd {
-	return func() tea.Msg {
-		switch m.status {
-		case accountsFocus:
-			return toggleFocusMsg{emailsFocus}
-		}
-		return toggleFocusMsg{accountsFocus}
+func (m rootmodel) toggleFocus() tea.Msg {
+	switch m.status {
+	case accountsFocus:
+		return toggleFocusMsg{emailsFocus}
 	}
+	return toggleFocusMsg{accountsFocus}
 }
 
 func (m rootmodel) View() string {
