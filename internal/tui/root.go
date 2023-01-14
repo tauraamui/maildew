@@ -1,8 +1,6 @@
 package tui
 
 import (
-	"strings"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/tauraamui/maildew/internal/storage/repo"
@@ -18,15 +16,23 @@ var (
 				BorderForeground(lipgloss.Color("69"))
 )
 
+type focusStatus int
+
+const (
+	accountsFocus focusStatus = iota
+	emailsFocus
+)
+
 type rootmodel struct {
+	status       focusStatus
 	windowSize   tea.WindowSizeMsg
-	focusIndex   int
 	accountsList tea.Model
 	emailsList   tea.Model
 }
 
 func newRootModel(ar repo.Accounts, er repo.Emails) rootmodel {
 	return rootmodel{
+		status:       accountsFocus,
 		accountsList: newAccountsListModel(ar),
 		emailsList:   newEmailListModel(er),
 	}
@@ -39,6 +45,7 @@ func (m rootmodel) Init() tea.Cmd {
 func (m rootmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	cmds := []tea.Cmd{}
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
@@ -47,37 +54,53 @@ func (m rootmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.emailsList, cmd = m.emailsList.Update(msg)
 		cmds = append(cmds, cmd)
+
 		return m, tea.Batch(cmds...)
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c":
-			return m, tea.Quit
 		case "tab":
-			m.focusIndex++
-			if m.focusIndex > 1 {
-				m.focusIndex = 0
-			}
+			return m, m.toggleFocus()
 		}
+	case toggleFocusMsg:
+		m.status = msg.focus
 	}
 
-	if m.focusIndex == 0 {
+	switch m.status {
+	case accountsFocus:
 		m.accountsList, cmd = m.accountsList.Update(msg)
 		cmds = append(cmds, cmd)
-		return m, tea.Batch(cmds...)
+	case emailsFocus:
+		m.emailsList, cmd = m.emailsList.Update(msg)
+		cmds = append(cmds, cmd)
 	}
-
-	m.emailsList, cmd = m.emailsList.Update(msg)
-	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
 }
 
-func (m rootmodel) View() string {
-	var b strings.Builder
-	if m.focusIndex == 0 {
-		b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, focusedModelStyle.Render(m.accountsList.View()), modelStyle.Render(m.emailsList.View())))
-		return b.String()
+type toggleFocusMsg struct{ focus focusStatus }
+
+func (m rootmodel) toggleFocus() tea.Cmd {
+	return func() tea.Msg {
+		switch m.status {
+		case accountsFocus:
+			return toggleFocusMsg{emailsFocus}
+		}
+		return toggleFocusMsg{accountsFocus}
 	}
-	b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, modelStyle.Render(m.accountsList.View()), focusedModelStyle.Render(m.emailsList.View())))
-	return b.String()
+}
+
+func (m rootmodel) View() string {
+	var accountsView string
+	var emailsView string
+
+	switch m.status {
+	case accountsFocus:
+		accountsView = focusedModelStyle.Render(m.accountsList.View())
+		emailsView = modelStyle.Render(m.emailsList.View())
+	case emailsFocus:
+		accountsView = modelStyle.Render(m.accountsList.View())
+		emailsView = focusedModelStyle.Render(m.emailsList.View())
+	}
+
+	return lipgloss.JoinHorizontal(lipgloss.Top, accountsView, emailsView)
 }

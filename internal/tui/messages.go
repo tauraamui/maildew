@@ -7,9 +7,6 @@ type (
 	updateFocusedInputsMsg struct {
 		index int
 	}
-	switchModeMsg struct {
-		mode mode
-	}
 	resetFormMsg        struct{}
 	authenticateUserMsg struct{}
 )

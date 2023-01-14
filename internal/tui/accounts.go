@@ -50,11 +50,6 @@ func (m accountsmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.windowSize = msg
 		h, v := marginStyle.GetFrameSize()
 		m.list.SetSize(m.windowSize.Width-h, m.windowSize.Height-v)
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c":
-			return m, tea.Quit
-		}
 	}
 
 	m.list, cmd = m.list.Update(msg)

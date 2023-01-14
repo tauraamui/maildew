@@ -6,10 +6,7 @@ import (
 	// account "github.com/tauraamui/maildew/internal/storage"
 )
 
-type (
-	mode   int
-	status int
-)
+type status int
 
 const (
 	rootStatus status = iota
@@ -41,13 +38,21 @@ func (m *Model) Init() tea.Cmd {
 
 // Update handle IO and commands
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	cmds := []tea.Cmd{}
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
+		m.root, cmd = m.root.Update(msg)
+		cmds = append(cmds, cmd)
+
+		m.createAccount, cmd = m.createAccount.Update(msg)
+		cmds = append(cmds, cmd)
+
+		return m, tea.Batch(cmds...)
 	}
 
-	var cmd tea.Cmd
-	cmds := []tea.Cmd{}
 	switch m.status {
 	case rootStatus:
 		m.root, cmd = m.root.Update(msg)
