@@ -97,7 +97,7 @@ func (r *Accounts) tableName() string {
 
 func (r *Accounts) nextRowID() (uint64, error) {
 	if r.seq == nil {
-		seq, err := r.DB.GetSeq([]byte(accountsTableName), 100)
+		seq, err := r.DB.GetSeq([]byte(accountsTableName), 1)
 		if err != nil {
 			return 0, err
 		}

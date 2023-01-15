@@ -31,7 +31,8 @@ func InitMail(ar repo.Accounts, er repo.Emails) tea.Model {
 
 // Init run any intial IO on program start
 func (m *Model) Init() tea.Cmd {
-	m.status = rootStatus
+	// m.status = rootStatus
+	m.status = createAccountStatus
 
 	return nil
 }

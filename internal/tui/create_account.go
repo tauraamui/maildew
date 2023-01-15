@@ -131,7 +131,7 @@ func (m createaccountmodel) handleKeyMsg(msg tea.KeyMsg) (bool, tea.Model, tea.C
 			m.err = nil
 
 			cmds = append(cmds, createAccount(m.ar, m.inputs[0].Value(), m.inputs[1].Value(), m.inputs[2].Value()))
-			// cmds = append(cmds, resetFormCmd())
+			cmds = append(cmds, resetFormCmd())
 			return true, m, tea.Batch(cmds...)
 		}
 
