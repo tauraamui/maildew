@@ -80,6 +80,10 @@ func (m rootmodel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+//  FIX: whenever the longer list is scrolled through when it gets to the last page
+//		 it shows entry numbers for entries which are no longer rendered or present
+//		 this rendering issue resolves itself when the focus is switched back and forth.
+
 func (m rootmodel) View() string {
 	var accountsView string
 	var emailsView string
