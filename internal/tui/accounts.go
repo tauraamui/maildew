@@ -7,6 +7,9 @@ import (
 	"github.com/tauraamui/maildew/internal/storage/repo"
 )
 
+// TODO(tauraamui): Fix bug #1 where when scrolling in the list the headings
+// of entries from the previous page remain but there are no actual entries
+
 type accountsmodel struct {
 	ar         repo.Accounts
 	windowSize tea.WindowSizeMsg
