@@ -37,7 +37,7 @@ func TestSaveUser(t *testing.T) {
 	is.NoErr(r.Save(&user))
 
 	is.NoErr(compareContentsWithExpected(r.DB, map[string][]byte{
-		"accounts":              {0, 0, 0, 0, 0, 0, 0, 100},
+		"accounts":              {0, 0, 0, 0, 0, 0, 0, 1},
 		"accounts.email.0.0":    []byte("test@place.com"),
 		"accounts.nick.0.0":     []byte("Test User"),
 		"accounts.password.0.0": []byte("fefweiofeifwwef"),
@@ -52,7 +52,7 @@ func TestGetUser(t *testing.T) {
 	defer r.Close()
 
 	is.NoErr(insertContents(r.DB, map[string][]byte{
-		"accounts":              {0, 0, 0, 0, 0, 0, 0, 100},
+		"accounts":              {0, 0, 0, 0, 0, 0, 0, 1},
 		"accounts.email.0.0":    []byte("test@place.com"),
 		"accounts.nick.0.0":     []byte("Test User"),
 		"accounts.password.0.0": []byte("fefweiofeifwwef"),
@@ -74,7 +74,7 @@ func TestGetAllUsers(t *testing.T) {
 	defer r.Close()
 
 	is.NoErr(insertContents(r.DB, map[string][]byte{
-		"accounts":              {0, 0, 0, 0, 0, 0, 0, 100},
+		"accounts":              {0, 0, 0, 0, 0, 0, 0, 1},
 		"accounts.email.0.0":    []byte("first@place.com"),
 		"accounts.nick.0.0":     []byte("First User"),
 		"accounts.password.0.0": []byte("wwqdwdqdqwdqd"),
