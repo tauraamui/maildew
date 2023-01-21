@@ -9,9 +9,9 @@ import (
 	"github.com/emersion/go-smtp"
 )
 
-type MockServer struct{}
+type MockSMTPServer struct{}
 
-func (ms *MockServer) NewSession(_ *smtp.Conn) (smtp.Session, error) {
+func (ms *MockSMTPServer) NewSession(_ *smtp.Conn) (smtp.Session, error) {
 	return &Session{}, nil
 }
 

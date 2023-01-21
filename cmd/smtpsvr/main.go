@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	svr := mail.MockServer{}
+	svr := mail.MockSMTPServer{}
 
 	s := smtp.NewServer(&svr)
 
