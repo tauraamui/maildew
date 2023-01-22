@@ -20,6 +20,9 @@ func (be *Backend) Login(_ *imap.ConnInfo, username, password string) (backend.U
 	return nil, errors.New("bad username or password")
 }
 
+// NOTE:(tauraamui) having our own implementation of a mock IMAP server
+// backend will allow us more control for things like number of
+// mailboxes and the number of messages per mailbox
 func New() *Backend {
 	usr := &user{username: "username", password: "password"}
 
