@@ -11,8 +11,13 @@ type Mailbox struct {
 	Name string
 }
 
+type Message struct {
+	Subject string
+}
+
 type Client interface {
 	Mailboxes() ([]Mailbox, error)
+	Messages(Mailbox) ([]Message, error)
 	Close() error
 }
 
@@ -36,7 +41,7 @@ func (c client) Mailboxes() ([]Mailbox, error) {
 
 	mailboxes := []Mailbox{}
 	go func() {
-		done <- c.client.List("", "", mailboxesChan)
+		done <- c.client.List("", "*", mailboxesChan)
 	}()
 
 	for m := range mailboxesChan {
@@ -44,6 +49,39 @@ func (c client) Mailboxes() ([]Mailbox, error) {
 	}
 
 	return mailboxes, <-done
+}
+
+func (c client) Messages(mailbox Mailbox) ([]Message, error) {
+	mb, err := c.client.Select(mailbox.Name, true)
+	if err != nil {
+		return nil, err
+	}
+
+	from := uint32(1)
+	to := mb.Messages
+	if mb.Messages > 3 {
+		to = mb.Messages - 3
+	}
+
+	seqset := imap.SeqSet{}
+	seqset.AddRange(from, to)
+
+	msgsch := make(chan *imap.Message, 10)
+	done := make(chan error, 1)
+	go func() {
+		done <- c.client.Fetch(&seqset, []imap.FetchItem{imap.FetchEnvelope}, msgsch)
+	}()
+
+	msgs := []Message{}
+	for msg := range msgsch {
+		msgs = append(msgs, Message{Subject: msg.Envelope.Subject})
+	}
+
+	if err := <-done; err != nil {
+		return nil, err
+	}
+
+	return msgs, nil
 }
 
 func (c client) Close() error {
