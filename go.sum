@@ -153,8 +153,8 @@ github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5Cc
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/tacusci/logging/v2 v2.1.1 h1:aVgYcSASKwwyRh/s++yFydbn7h4Q90dxFDIklYco0YY=
 github.com/tacusci/logging/v2 v2.1.1/go.mod h1:Hin7AeOcbJM7H8Crv8OXCugJFFK5Lo3qlhS6qpwDC2o=
-github.com/tauraamui/xerror v0.0.0-20211027201245-7be9e626485f h1:uMzLx++jqIVB5xASd5C0xJoLVcRP0uktZg8c4WUiKOM=
-github.com/tauraamui/xerror v0.0.0-20211027201245-7be9e626485f/go.mod h1:+CS36e35qeE+82P7DGhBib7EB1qorBMA+ewe+G8NxmU=
+github.com/tauraamui/xerror v0.0.0-20230122173728-a6ff5ab2f4d7 h1:ZyFC4sQCUfU/umdPLO18wiP3ToemuuWqu81N8ypWG60=
+github.com/tauraamui/xerror v0.0.0-20230122173728-a6ff5ab2f4d7/go.mod h1:+CS36e35qeE+82P7DGhBib7EB1qorBMA+ewe+G8NxmU=
 github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8/go.mod h1:VFNgLljTbGfSG7qAOspJ7OScBnGdDN/yBr0sguwnwf0=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

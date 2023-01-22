@@ -9,6 +9,7 @@ import (
 	"github.com/emersion/go-imap/server"
 	"github.com/matryer/is"
 	"github.com/tauraamui/maildew/internal/mail"
+	"github.com/tauraamui/xerror/errgroup"
 )
 
 // NOTE: there are comments next to most of the assertions, especially
@@ -58,10 +59,9 @@ func setupClientConnection() (mail.Client, error, func() error) {
 	err, shutdown := startLocalServer(l)
 	if err != nil {
 		return nil, err, func() error {
-			// TODO: implement the usage of an error group to collect all errors
-			//       from cleaning up connections etc., rather than ignoring them all
-			l.Close()
-			return nil
+			// NOTE: since starting the server was the cause of the error
+			//       it's unnecessary to call the given shutdown callback
+			return l.Close()
 		}
 	}
 
@@ -70,20 +70,20 @@ func setupClientConnection() (mail.Client, error, func() error) {
 	client, err := mail.Connect(addr, "username", "password")
 	if err != nil {
 		return nil, err, func() error {
-			// TODO: implement the usage of an error group to collect all errors
-			//       from cleaning up connections etc., rather than ignoring them all
-			l.Close()
-			shutdown()
-			return nil
+			errs := errgroup.I{}
+
+			errs.Append(l.Close())
+			errs.Append(shutdown())
+			return errs.ToErrOrNil()
 		}
 	}
 
 	return client, nil, func() error {
-		// TODO: implement the usage of an error group to collect all errors
-		//       from cleaning up connections etc., rather than ignoring them all
-		l.Close()
-		shutdown()
-		return nil
+		errs := errgroup.I{}
+
+		errs.Append(l.Close())
+		errs.Append(shutdown())
+		return errs.ToErrOrNil()
 	}
 }
 

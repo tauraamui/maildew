@@ -15,7 +15,7 @@ require (
 	github.com/spf13/afero v1.6.0
 	github.com/stretchr/testify v1.7.0
 	github.com/tacusci/logging/v2 v2.1.1
-	github.com/tauraamui/xerror v0.0.0-20211027201245-7be9e626485f
+	github.com/tauraamui/xerror v0.0.0-20230122173728-a6ff5ab2f4d7
 	golang.org/x/text v0.5.0
 	gopkg.in/dealancer/validate.v2 v2.1.0
 )
