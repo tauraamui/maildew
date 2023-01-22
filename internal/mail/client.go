@@ -13,10 +13,14 @@ type Mailbox struct {
 
 type Client interface {
 	Mailboxes() ([]Mailbox, error)
+	Close() error
 }
 
-func Connect(email, password string) (Client, error) {
-	c, err := imapclient.Dial(":1143")
+func Connect(address, email, password string) (Client, error) {
+	c, err := imapclient.Dial(address)
+	if err := c.Login(email, password); err != nil {
+		return nil, err
+	}
 	return client{
 		client: c,
 	}, err
@@ -40,4 +44,8 @@ func (c client) Mailboxes() ([]Mailbox, error) {
 	}
 
 	return mailboxes, <-done
+}
+
+func (c client) Close() error {
+	return c.client.Close()
 }
