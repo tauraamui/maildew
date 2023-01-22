@@ -1,6 +1,6 @@
 package mail
 
-// TODO: implement client, decide on the interface etc.,
+// TODO:(tauraamui) implement client, decide on the interface etc.,
 
 import (
 	"github.com/emersion/go-imap"

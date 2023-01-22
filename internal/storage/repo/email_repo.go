@@ -51,7 +51,7 @@ func (r *Emails) GetByID(rowID uint64) (models.Email, error) {
 	return acc, nil
 }
 
-// TODO: Really all of the generic "Getters" and "Setters" methods
+// TODO:(tauraamui) really all of the generic "Getters" and "Setters" methods
 // of these repos are identical thanks to using the storage backend
 // so should move each of these into using Go generics rather than
 // copying them for each type.

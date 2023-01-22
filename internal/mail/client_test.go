@@ -12,7 +12,7 @@ import (
 	"github.com/tauraamui/xerror/errgroup"
 )
 
-// NOTE: there are comments next to most of the assertions, especially
+// NOTE:(tauraamui) there are comments next to most of the assertions, especially
 //		 the no error ones because the matryer/is library shows the comments
 //       in the test output when those assertions fail
 
@@ -59,7 +59,7 @@ func setupClientConnection() (mail.Client, error, func() error) {
 	err, shutdown := startLocalServer(l)
 	if err != nil {
 		return nil, err, func() error {
-			// NOTE: since starting the server was the cause of the error
+			// NOTE:(tauraamui) since starting the server was the cause of the error
 			//       it's unnecessary to call the given shutdown callback
 			return l.Close()
 		}
