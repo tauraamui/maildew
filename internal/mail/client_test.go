@@ -46,7 +46,7 @@ func TestClientListMailboxes(t *testing.T) {
 	is.True(client != nil)
 
 	mailboxes, err := client.Mailboxes()
-	is.NoErr(err)
+	is.NoErr(err) // error fetching mailboxes
 	is.Equal([]mail.Mailbox{{Name: "/"}}, mailboxes)
 }
 
