@@ -5,10 +5,10 @@ import (
 	"net"
 	"testing"
 
-	"github.com/emersion/go-imap/backend/memory"
 	"github.com/emersion/go-imap/server"
 	"github.com/matryer/is"
 	"github.com/tauraamui/maildew/internal/mail"
+	"github.com/tauraamui/maildew/internal/mail/mock"
 	"github.com/tauraamui/xerror/errgroup"
 )
 
@@ -109,7 +109,7 @@ func setupListener() (net.Listener, error) {
 }
 
 func startLocalServer(l net.Listener) (error, func() error) {
-	s := server.New(memory.New())
+	s := server.New(mock.New())
 	s.AllowInsecureAuth = true
 
 	go s.Serve(l)
