@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/tauraamui/maildew/internal/mail"
 	"github.com/tauraamui/maildew/internal/storage/models"
 	"github.com/tauraamui/maildew/internal/storage/repo"
 )
@@ -14,6 +15,7 @@ import (
 var marginStyle = lipgloss.NewStyle().Margin(1, 1, 1, 1)
 
 type emailsmodel struct {
+	client     mail.Client
 	er         repo.Emails
 	windowSize tea.WindowSizeMsg
 	list       list.Model

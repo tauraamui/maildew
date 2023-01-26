@@ -5,6 +5,7 @@ package mail
 import (
 	"github.com/emersion/go-imap"
 	imapclient "github.com/emersion/go-imap/client"
+	"github.com/tauraamui/maildew/internal/storage"
 )
 
 type Mailbox struct {
@@ -12,7 +13,12 @@ type Mailbox struct {
 }
 
 type Message struct {
-	Subject string
+	To,
+	Subject,
+	Date,
+	MessageID,
+	ContentType,
+	Body string
 }
 
 type Client interface {
@@ -21,7 +27,7 @@ type Client interface {
 	Close() error
 }
 
-func Connect(address, email, password string) (Client, error) {
+func Connect(db storage.DB, address, email, password string) (Client, error) {
 	c, err := imapclient.Dial(address)
 	if err := c.Login(email, password); err != nil {
 		return nil, err
@@ -32,7 +38,12 @@ func Connect(address, email, password string) (Client, error) {
 }
 
 type client struct {
+	db     storage.DB
 	client *imapclient.Client
+}
+
+func syncRemoteMessagesWithDB(db storage.DB, client *imapclient.Client) error {
+	return nil
 }
 
 func (c client) Mailboxes() ([]Mailbox, error) {
@@ -47,7 +58,6 @@ func (c client) Mailboxes() ([]Mailbox, error) {
 	for m := range mailboxesChan {
 		mailboxes = append(mailboxes, Mailbox{m.Name})
 	}
-
 	return mailboxes, <-done
 }
 
@@ -74,7 +84,15 @@ func (c client) Messages(mailbox Mailbox) ([]Message, error) {
 
 	msgs := []Message{}
 	for msg := range msgsch {
-		msgs = append(msgs, Message{Subject: msg.Envelope.Subject})
+		msgs = append(
+			msgs, Message{
+				To:          msg.Envelope.InReplyTo,
+				Subject:     msg.Envelope.Subject,
+				Date:        msg.Envelope.MessageId,
+				ContentType: msg.BodyStructure.MIMEType,
+				Body:        msg.Envelope.Format,
+			},
+		)
 	}
 
 	if err := <-done; err != nil {
