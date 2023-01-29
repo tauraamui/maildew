@@ -47,7 +47,9 @@ func TestClientFetchMailboxes(t *testing.T) {
 
 	mailboxes, err := client.FetchAllMailboxes()
 	is.NoErr(err) // error fetching mailboxes
-	is.Equal([]mail.Mailbox{{Name: "INBOX"}}, mailboxes)
+
+	is.True(len(mailboxes) > 0)
+	is.Equal(mailboxes[0].Name, "INBOX")
 }
 
 func TestClientFetchAllInboxMessages(t *testing.T) {
@@ -58,7 +60,9 @@ func TestClientFetchAllInboxMessages(t *testing.T) {
 	is.NoErr(err)          // error connecting to imap server
 	is.True(client != nil) // ensure client is not nil
 
-	msgs, err := client.FetchAllMessages(mail.Mailbox{Name: "INBOX"})
+	mb, err := client.FetchMailbox("INBOX", true)
+	is.NoErr(err) // error fetching mailbox of INBOX name
+	msgs, err := mb.FetchAllMessages()
 	is.NoErr(err)                                                               // error fetching inbox messages
 	is.Equal(msgs, []mail.Message{{Subject: "A little message, just for you"}}) // list of messages does not match expected
 }
@@ -71,7 +75,9 @@ func TestClientFetchAllInboxMessageUIDs(t *testing.T) {
 	is.NoErr(err)
 	is.True(client != nil)
 
-	uids, err := client.FetchAllMessageUIDs(mail.Mailbox{Name: "INBOX"})
+	mb, err := client.FetchMailbox("INBOX", true)
+	is.NoErr(err) // error fetching mailbox of INBOX name
+	uids, err := mb.FetchAllMessageUIDs()
 	is.NoErr(err)
 	is.Equal(uids, []mail.MessageUID{6})
 }

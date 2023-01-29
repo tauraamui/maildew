@@ -7,10 +7,6 @@ import (
 	imapclient "github.com/emersion/go-imap/client"
 )
 
-type Mailbox struct {
-	Name string
-}
-
 type MessageUID uint32
 
 type MessageHeader struct {
@@ -22,10 +18,15 @@ type Message struct {
 }
 
 type Client interface {
+	FetchMailbox(string, bool) (Mailbox, error)
 	FetchAllMailboxes() ([]Mailbox, error)
-	FetchAllMessages(Mailbox) ([]Message, error)
-	FetchAllMessageUIDs(Mailbox) ([]MessageUID, error)
+	messageFetcher
 	Close() error
+}
+
+type messageFetcher interface {
+	fetchAllMessages(Mailbox) ([]Message, error)
+	fetchAllMessageUIDs(Mailbox) ([]MessageUID, error)
 }
 
 func Connect(address, email, password string) (Client, error) {
@@ -42,6 +43,15 @@ type client struct {
 	client *imapclient.Client
 }
 
+func (c client) FetchMailbox(name string, ro bool) (Mailbox, error) {
+	m, err := c.client.Select(name, ro)
+	if err != nil {
+		return Mailbox{}, err
+	}
+
+	return Mailbox{c, m.Name}, nil
+}
+
 func (c client) FetchAllMailboxes() ([]Mailbox, error) {
 	mailboxesChan := make(chan *imap.MailboxInfo, 10)
 	done := make(chan error, 1)
@@ -52,13 +62,13 @@ func (c client) FetchAllMailboxes() ([]Mailbox, error) {
 	}()
 
 	for m := range mailboxesChan {
-		mailboxes = append(mailboxes, Mailbox{m.Name})
+		mailboxes = append(mailboxes, Mailbox{c, m.Name})
 	}
 
 	return mailboxes, <-done
 }
 
-func (c client) FetchAllMessages(mailbox Mailbox) ([]Message, error) {
+func (c client) fetchAllMessages(mailbox Mailbox) ([]Message, error) {
 	mb, err := c.client.Select(mailbox.Name, true)
 	if err != nil {
 		return nil, err
@@ -87,7 +97,7 @@ func (c client) FetchAllMessages(mailbox Mailbox) ([]Message, error) {
 	return msgs, nil
 }
 
-func (c client) FetchAllMessageUIDs(mailbox Mailbox) ([]MessageUID, error) {
+func (c client) fetchAllMessageUIDs(mailbox Mailbox) ([]MessageUID, error) {
 	mb, err := c.client.Select(mailbox.Name, true)
 	if err != nil {
 		return nil, err
