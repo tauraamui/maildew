@@ -11,13 +11,20 @@ type Mailbox struct {
 	Name string
 }
 
+type MessageUID uint32
+
+type MessageHeader struct {
+	MessageUID
+}
+
 type Message struct {
 	Subject string
 }
 
 type Client interface {
-	Mailboxes() ([]Mailbox, error)
-	Messages(Mailbox) ([]Message, error)
+	FetchAllMailboxes() ([]Mailbox, error)
+	FetchAllMessages(Mailbox) ([]Message, error)
+	FetchAllMessageUIDs(Mailbox) ([]MessageUID, error)
 	Close() error
 }
 
@@ -35,7 +42,7 @@ type client struct {
 	client *imapclient.Client
 }
 
-func (c client) Mailboxes() ([]Mailbox, error) {
+func (c client) FetchAllMailboxes() ([]Mailbox, error) {
 	mailboxesChan := make(chan *imap.MailboxInfo, 10)
 	done := make(chan error, 1)
 
@@ -51,7 +58,7 @@ func (c client) Mailboxes() ([]Mailbox, error) {
 	return mailboxes, <-done
 }
 
-func (c client) Messages(mailbox Mailbox) ([]Message, error) {
+func (c client) FetchAllMessages(mailbox Mailbox) ([]Message, error) {
 	mb, err := c.client.Select(mailbox.Name, true)
 	if err != nil {
 		return nil, err
@@ -59,14 +66,10 @@ func (c client) Messages(mailbox Mailbox) ([]Message, error) {
 
 	from := uint32(1)
 	to := mb.Messages
-	if mb.Messages > 3 {
-		to = mb.Messages - 3
-	}
-
 	seqset := imap.SeqSet{}
 	seqset.AddRange(from, to)
 
-	msgsch := make(chan *imap.Message, 10)
+	msgsch := make(chan *imap.Message, 1)
 	done := make(chan error, 1)
 	go func() {
 		done <- c.client.Fetch(&seqset, []imap.FetchItem{imap.FetchEnvelope}, msgsch)
@@ -82,6 +85,34 @@ func (c client) Messages(mailbox Mailbox) ([]Message, error) {
 	}
 
 	return msgs, nil
+}
+
+func (c client) FetchAllMessageUIDs(mailbox Mailbox) ([]MessageUID, error) {
+	mb, err := c.client.Select(mailbox.Name, true)
+	if err != nil {
+		return nil, err
+	}
+
+	seqset := imap.SeqSet{}
+	seqset.AddRange(uint32(1), mb.Messages)
+
+	msgsch := make(chan *imap.Message, 1)
+	done := make(chan error, 1)
+
+	go func() {
+		done <- c.client.Fetch(&seqset, []imap.FetchItem{imap.FetchUid}, msgsch)
+	}()
+
+	headers := []MessageUID{}
+	for msg := range msgsch {
+		headers = append(headers, MessageUID(msg.Uid))
+	}
+
+	if err := <-done; err != nil {
+		return nil, err
+	}
+
+	return headers, nil
 }
 
 func (c client) Close() error {
