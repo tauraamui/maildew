@@ -4,7 +4,7 @@ import (
 	"github.com/tauraamui/gonp"
 )
 
-func ResolveNewAndMissing(a, b []uint32) ([]uint32, []uint32) {
+func ResolveAddedAndRemoved(a, b []uint32) ([]uint32, []uint32) {
 	return diffUIDs(a, b)
 }
 

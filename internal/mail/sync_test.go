@@ -13,7 +13,7 @@ func TestResolveNewAndDeletedUIDsFromSetsSuccess(t *testing.T) {
 	local := []uint32{122, 123, 124, 125, 128}
 	remote := []uint32{122, 124, 125, 128, 129}
 
-	new, missing := mail.ResolveNewAndMissing(local, remote)
+	new, missing := mail.ResolveAddedAndRemoved(local, remote)
 
 	is.Equal(new, []uint32{129})
 	is.Equal(missing, []uint32{123})
