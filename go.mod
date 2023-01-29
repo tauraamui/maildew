@@ -1,6 +1,6 @@
 module github.com/tauraamui/maildew
 
-go 1.17
+go 1.19
 
 require (
 	github.com/charmbracelet/bubbles v0.14.0
@@ -8,6 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/dgraph-io/badger/v3 v3.2103.5
 	github.com/emersion/go-imap v1.2.1
+	github.com/emersion/go-message v0.15.0
 	github.com/emersion/go-smtp v0.16.0
 	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
 	github.com/matryer/is v1.4.0
@@ -15,6 +16,7 @@ require (
 	github.com/spf13/afero v1.6.0
 	github.com/stretchr/testify v1.7.0
 	github.com/tacusci/logging/v2 v2.1.1
+	github.com/tauraamui/gonp v0.0.0-20230129073740-ad7ea625393b
 	github.com/tauraamui/xerror v0.0.0-20230122173728-a6ff5ab2f4d7
 	golang.org/x/text v0.5.0
 	gopkg.in/dealancer/validate.v2 v2.1.0
@@ -29,7 +31,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
-	github.com/emersion/go-message v0.15.0 // indirect
 	github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21 // indirect
 	github.com/emersion/go-textwrapper v0.0.0-20200911093747-65d896831594 // indirect
 	github.com/fatih/color v1.10.0 // indirect
