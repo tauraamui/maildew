@@ -3,7 +3,7 @@ package models
 import "strconv"
 
 type Email struct {
-	ID      uint64 `mdb:"ignore"`
+	ID      uint32 `mdb:"ignore"`
 	Subject string
 }
 

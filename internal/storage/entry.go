@@ -14,8 +14,8 @@ import (
 type Entry struct {
 	TableName  string
 	ColumnName string
-	OwnerID    uint64
-	RowID      uint64
+	OwnerID    uint32
+	RowID      uint32
 	Data       []byte
 }
 
@@ -51,12 +51,12 @@ func Get(db DB, e *Entry) error {
 	})
 }
 
-func ConvertToBlankEntries(tableName string, ownerID, rowID uint64, x interface{}) []Entry {
+func ConvertToBlankEntries(tableName string, ownerID, rowID uint32, x interface{}) []Entry {
 	v := reflect.ValueOf(x)
 	return convertToEntries(tableName, ownerID, rowID, v, false)
 }
 
-func ConvertToEntries(tableName string, ownerID, rowID uint64, x interface{}) []Entry {
+func ConvertToEntries(tableName string, ownerID, rowID uint32, x interface{}) []Entry {
 	v := reflect.ValueOf(x)
 	return convertToEntries(tableName, ownerID, rowID, v, true)
 }
@@ -90,7 +90,7 @@ func LoadEntries(s interface{}, entries []Entry) error {
 	return nil
 }
 
-func convertToEntries(tableName string, ownerID, rowID uint64, v reflect.Value, includeData bool) []Entry {
+func convertToEntries(tableName string, ownerID, rowID uint32, v reflect.Value, includeData bool) []Entry {
 	entries := []Entry{}
 
 	for i := 0; i < v.NumField(); i++ {

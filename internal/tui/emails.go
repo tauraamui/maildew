@@ -20,7 +20,7 @@ type emailsmodel struct {
 }
 
 func populateRepoWithFake(er *repo.Emails) {
-	var accID uint64 = 0
+	var accID uint32 = 0
 	for i := 0; i < 100; i++ {
 		if i%2 == 0 {
 			accID = 1

@@ -1,8 +1,11 @@
 package mail
 
+import "github.com/tauraamui/maildew/internal/storage/models"
+
 type Mailbox struct {
-	mf   messageFetcher
-	Name string
+	mf      messageFetcher
+	account models.Account
+	Name    string
 }
 
 func (m Mailbox) FetchAllMessages() ([]Message, error) {

@@ -27,7 +27,7 @@ func TestEntryStoreValuesInTable(t *testing.T) {
 	id, err := seq.Next()
 	is.NoErr(err) // error occurred when aquiring next iter value
 
-	e.RowID = id
+	e.RowID = uint32(id)
 
 	is.NoErr(storage.Store(db, e)) // error occurred when calling store
 

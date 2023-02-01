@@ -5,6 +5,7 @@ package mail
 import (
 	"github.com/emersion/go-imap"
 	imapclient "github.com/emersion/go-imap/client"
+	"github.com/tauraamui/maildew/internal/storage/models"
 )
 
 type MessageUID uint32
@@ -29,18 +30,20 @@ type messageFetcher interface {
 	fetchAllMessageUIDs(Mailbox) ([]MessageUID, error)
 }
 
-func Connect(address, email, password string) (Client, error) {
+func Connect(address string, account models.Account) (Client, error) {
 	c, err := imapclient.Dial(address)
-	if err := c.Login(email, password); err != nil {
+	if err := c.Login(account.Email, account.Password); err != nil {
 		return nil, err
 	}
 	return client{
-		client: c,
+		client:  c,
+		account: account,
 	}, err
 }
 
 type client struct {
-	client *imapclient.Client
+	client  *imapclient.Client
+	account models.Account
 }
 
 func (c client) FetchMailbox(name string, ro bool) (Mailbox, error) {
@@ -49,7 +52,7 @@ func (c client) FetchMailbox(name string, ro bool) (Mailbox, error) {
 		return Mailbox{}, err
 	}
 
-	return Mailbox{c, m.Name}, nil
+	return Mailbox{c, c.account, m.Name}, nil
 }
 
 func (c client) FetchAllMailboxes() ([]Mailbox, error) {
@@ -62,7 +65,7 @@ func (c client) FetchAllMailboxes() ([]Mailbox, error) {
 	}()
 
 	for m := range mailboxesChan {
-		mailboxes = append(mailboxes, Mailbox{c, m.Name})
+		mailboxes = append(mailboxes, Mailbox{c, c.account, m.Name})
 	}
 
 	return mailboxes, <-done

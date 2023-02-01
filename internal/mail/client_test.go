@@ -9,6 +9,7 @@ import (
 	"github.com/matryer/is"
 	"github.com/tauraamui/maildew/internal/mail"
 	"github.com/tauraamui/maildew/internal/mail/mock"
+	"github.com/tauraamui/maildew/internal/storage/models"
 	"github.com/tauraamui/xerror/errgroup"
 )
 
@@ -32,7 +33,9 @@ func TestClientConnectToLocalMockServer(t *testing.T) {
 
 	addr := l.Addr().String()
 
-	client, err := mail.Connect(addr, "username", "password")
+	client, err := mail.Connect(addr, models.Account{
+		Email: "username", Password: "password",
+	})
 	is.NoErr(err) // error connecting to imap server
 	is.True(client != nil)
 }
@@ -99,7 +102,7 @@ func setupClientConnection() (mail.Client, error, func() error) {
 
 	addr := l.Addr().String()
 
-	client, err := mail.Connect(addr, "username", "password")
+	client, err := mail.Connect(addr, models.Account{Email: "username", Password: "password"})
 	if err != nil {
 		return nil, err, func() error {
 			errs := errgroup.I{}

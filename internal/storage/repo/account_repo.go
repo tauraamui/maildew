@@ -28,14 +28,14 @@ func (r *Accounts) Save(user *models.Account) error {
 		}
 	}
 
-	user.ID = rowID
+	user.ID = uint32(rowID)
 
 	return nil
 }
 
-func (r *Accounts) GetByID(rowID uint64) (models.Account, error) {
+func (r *Accounts) GetByID(rowID uint32) (models.Account, error) {
 	acc := models.Account{
-		ID: rowID,
+		ID: uint32(rowID),
 	}
 	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, rowID, acc)
 	for _, e := range blankEntries {
@@ -62,10 +62,10 @@ func (r *Accounts) GetAll() ([]models.Account, error) {
 			it := txn.NewIterator(badger.DefaultIteratorOptions)
 			defer it.Close()
 
-			var rows uint64 = 0
+			var rows uint32 = 0
 			for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 				// be very clear with our append conditions
-				if len(accounts) == 0 || rows >= uint64(len(accounts)) {
+				if len(accounts) == 0 || rows >= uint32(len(accounts)) {
 					accounts = append(accounts, models.Account{
 						ID: rows,
 					})
@@ -95,7 +95,7 @@ func (r *Accounts) tableName() string {
 	return accountsTableName
 }
 
-func (r *Accounts) nextRowID() (uint64, error) {
+func (r *Accounts) nextRowID() (uint32, error) {
 	if r.seq == nil {
 		seq, err := r.DB.GetSeq([]byte(accountsTableName), 1)
 		if err != nil {
@@ -104,7 +104,11 @@ func (r *Accounts) nextRowID() (uint64, error) {
 		r.seq = seq
 	}
 
-	return r.seq.Next()
+	s, err := r.seq.Next()
+	if err != nil {
+		return 0, err
+	}
+	return uint32(s), nil
 }
 
 func (r Accounts) Close() {
