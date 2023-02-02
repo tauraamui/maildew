@@ -100,7 +100,7 @@ func (r *Emails) tableName() string {
 
 func (r *Emails) nextRowID() (uint32, error) {
 	if r.seq == nil {
-		seq, err := r.DB.GetSeq([]byte(emailsTableName), 100)
+		seq, err := r.DB.GetSeq([]byte(r.tableName()), 100)
 		if err != nil {
 			return 0, err
 		}

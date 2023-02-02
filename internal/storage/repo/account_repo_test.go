@@ -119,12 +119,12 @@ func compareContentsWithExpected(db storage.DB, exp map[string][]byte) error {
 
 			ev, ok := exp[string(k)]
 			if !ok {
-				return fmt.Errorf("unexpected stored key %s", k)
+				return fmt.Errorf("unexpected stored key: %s", k)
 			}
 
 			if err := item.Value(func(v []byte) error {
 				if !bytes.Equal(ev, v) {
-					return fmt.Errorf("expected does not match stored %v != %v", ev, v)
+					return fmt.Errorf("expected does not match stored: %v != %v", ev, v)
 				}
 				return nil
 			}); err != nil {
