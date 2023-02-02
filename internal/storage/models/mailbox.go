@@ -4,7 +4,7 @@ import "strconv"
 
 type Mailbox struct {
 	ID   uint32 `mdb:"ignore"`
-	UID  uint64
+	UID  uint32
 	Name string
 }
 
