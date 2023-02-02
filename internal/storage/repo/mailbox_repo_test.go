@@ -59,6 +59,32 @@ func TestGetMailbox(t *testing.T) {
 	is.Equal(mb.Name, "Fake mailbox")
 }
 
+func TestGetAllMailboxes(t *testing.T) {
+	is := is.New(t)
+
+	r, err := resolveMailboxRepo()
+	is.NoErr(err)
+	defer r.Close()
+
+	is.NoErr(insertContents(r.DB, map[string][]byte{
+		"mailboxes":          {0, 0, 0, 0, 0, 0, 0, 1},
+		"mailboxes.uid.0.0":  helperConvertToBytes(t, 244),
+		"mailboxes.name.0.0": helperConvertToBytes(t, "First fake mailbox"),
+		"mailboxes.uid.0.1":  helperConvertToBytes(t, 968),
+		"mailboxes.name.0.1": helperConvertToBytes(t, "Second fake mailbox"),
+	}))
+
+	mbs, err := r.GetAll(0)
+	is.NoErr(err)
+	is.Equal(len(mbs), 2)
+
+	first, second := mbs[0], mbs[1]
+	is.Equal(first.UID, uint32(244))
+	is.Equal(first.Name, "First fake mailbox")
+	is.Equal(second.UID, uint32(968))
+	is.Equal(second.Name, "Second fake mailbox")
+}
+
 func helperConvertToBytes(t *testing.T, i interface{}) []byte {
 	t.Helper()
 	b, err := convertToBytes(i)

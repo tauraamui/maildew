@@ -55,7 +55,42 @@ func (r *Mailboxes) GetByID(rowID uint32) (models.Mailbox, error) {
 }
 
 func (r *Mailboxes) GetAll(accountID uint32) ([]models.Mailbox, error) {
-	return []models.Mailbox{}, nil
+	mailboxes := make([]models.Mailbox, 1)
+
+	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, 0, mailboxes[0])
+	for _, ent := range blankEntries {
+		// iterate over all stored values for this entry
+		prefix := ent.PrefixKey()
+		r.DB.View(func(txn *badger.Txn) error {
+			it := txn.NewIterator(badger.DefaultIteratorOptions)
+			defer it.Close()
+
+			var rows uint32 = 0
+			for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+				if rows >= uint32(len(mailboxes)) {
+					mailboxes = append(mailboxes, models.Mailbox{
+						ID: rows,
+					})
+				}
+				item := it.Item()
+				ent.RowID = rows
+				if err := item.Value(func(val []byte) error {
+					ent.Data = val
+					return nil
+				}); err != nil {
+					return err
+				}
+				if err := storage.LoadEntry(&mailboxes[rows], ent); err != nil {
+					return err
+				}
+				rows++
+			}
+
+			return nil
+		})
+	}
+
+	return mailboxes, nil
 }
 
 func (r *Mailboxes) tableName() string {
