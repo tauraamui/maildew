@@ -68,8 +68,12 @@ func LoadEntry(s interface{}, entry Entry) error {
 	// Check if the entry's ColumnName field matches the name of any of the struct's fields
 	field := val.FieldByName(cases.Title(language.English).String(entry.ColumnName))
 	if !field.IsValid() {
-		// The struct does not have a field with the same name as the entry's ColumnName, so return an error
-		return fmt.Errorf("struct does not have a field with name %q", entry.ColumnName)
+		// check if entry column name matches full upper casing instead
+		field = val.FieldByName(cases.Upper(language.English).String(entry.ColumnName))
+		if !field.IsValid() {
+			// The struct does not have a field with the same name as the entry's ColumnName, so return an error
+			return fmt.Errorf("struct does not have a field with name %q", entry.ColumnName)
+		}
 	}
 
 	// Convert the entry's Data field to the type of the target field
@@ -90,6 +94,7 @@ func LoadEntries(s interface{}, entries []Entry) error {
 	return nil
 }
 
+// TODO:(tauraamui): come up with novel and well designed method of preserving full upper casing
 func convertToEntries(tableName string, ownerID, rowID uint32, v reflect.Value, includeData bool) []Entry {
 	entries := []Entry{}
 

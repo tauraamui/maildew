@@ -38,7 +38,20 @@ func (r *Mailboxes) Save(accountID uint32, mailbox *models.Mailbox) error {
 }
 
 func (r *Mailboxes) GetByID(rowID uint32) (models.Mailbox, error) {
-	return models.Mailbox{}, nil
+	mb := models.Mailbox{
+		ID: rowID,
+	}
+	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, rowID, mb)
+	for _, e := range blankEntries {
+		if err := storage.Get(r.DB, &e); err != nil {
+			return mb, err
+		}
+
+		if err := storage.LoadEntry(&mb, e); err != nil {
+			return mb, err
+		}
+	}
+	return mb, nil
 }
 
 func (r *Mailboxes) GetAll(accountID uint32) ([]models.Mailbox, error) {

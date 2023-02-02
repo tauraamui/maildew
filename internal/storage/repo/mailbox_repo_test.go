@@ -19,7 +19,7 @@ func resolveMailboxRepo() (repo.Mailboxes, error) {
 	return repo.Mailboxes{DB: db}, nil
 }
 
-func TestSaveMailboxSuccess(t *testing.T) {
+func TestSaveMailbox(t *testing.T) {
 	is := is.New(t)
 
 	r, err := resolveMailboxRepo()
@@ -35,8 +35,28 @@ func TestSaveMailboxSuccess(t *testing.T) {
 	is.NoErr(compareContentsWithExpected(r.DB, map[string][]byte{
 		"mailboxes":          {0, 0, 0, 0, 0, 0, 0, 100},
 		"mailboxes.uid.0.0":  helperConvertToBytes(t, 112),
-		"mailboxes.name.0.0": []byte("Fake mailbox"),
+		"mailboxes.name.0.0": helperConvertToBytes(t, "Fake mailbox"),
 	}))
+}
+
+func TestGetMailbox(t *testing.T) {
+	is := is.New(t)
+
+	r, err := resolveMailboxRepo()
+	is.NoErr(err)
+	defer r.Close()
+
+	is.NoErr(insertContents(r.DB, map[string][]byte{
+		"mailboxes":          {0, 0, 0, 0, 0, 0, 0, 1},
+		"mailboxes.uid.0.0":  helperConvertToBytes(t, 684),
+		"mailboxes.name.0.0": helperConvertToBytes(t, "Fake mailbox"),
+	}))
+
+	mb, err := r.GetByID(0)
+	is.NoErr(err)
+
+	is.Equal(mb.UID, uint32(684))
+	is.Equal(mb.Name, "Fake mailbox")
 }
 
 func helperConvertToBytes(t *testing.T, i interface{}) []byte {
