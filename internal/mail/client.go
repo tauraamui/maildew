@@ -21,11 +21,11 @@ type Message struct {
 type Client interface {
 	FetchMailbox(string, bool) (Mailbox, error)
 	FetchAllMailboxes() ([]Mailbox, error)
-	messageFetcher
+	MessageFetcher
 	Close() error
 }
 
-type messageFetcher interface {
+type MessageFetcher interface {
 	fetchAllMessages(Mailbox) ([]Message, error)
 	fetchAllMessageUIDs(Mailbox) ([]MessageUID, error)
 }
@@ -49,10 +49,10 @@ type client struct {
 func (c client) FetchMailbox(name string, ro bool) (Mailbox, error) {
 	m, err := c.client.Select(name, ro)
 	if err != nil {
-		return Mailbox{}, err
+		return nil, err
 	}
 
-	return Mailbox{c, c.account, m.Name}, nil
+	return newMailbox(m.Name, c.account, c), nil
 }
 
 func (c client) FetchAllMailboxes() ([]Mailbox, error) {
@@ -65,14 +65,14 @@ func (c client) FetchAllMailboxes() ([]Mailbox, error) {
 	}()
 
 	for m := range mailboxesChan {
-		mailboxes = append(mailboxes, Mailbox{c, c.account, m.Name})
+		mailboxes = append(mailboxes, newMailbox(m.Name, c.account, c))
 	}
 
 	return mailboxes, <-done
 }
 
 func (c client) fetchAllMessages(mailbox Mailbox) ([]Message, error) {
-	mb, err := c.client.Select(mailbox.Name, true)
+	mb, err := c.client.Select(mailbox.Name(), true)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (c client) fetchAllMessages(mailbox Mailbox) ([]Message, error) {
 }
 
 func (c client) fetchAllMessageUIDs(mailbox Mailbox) ([]MessageUID, error) {
-	mb, err := c.client.Select(mailbox.Name, true)
+	mb, err := c.client.Select(mailbox.Name(), true)
 	if err != nil {
 		return nil, err
 	}

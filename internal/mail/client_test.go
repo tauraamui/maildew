@@ -52,7 +52,7 @@ func TestClientFetchMailboxes(t *testing.T) {
 	is.NoErr(err) // error fetching mailboxes
 
 	is.True(len(mailboxes) > 0)
-	is.Equal(mailboxes[0].Name, "INBOX")
+	is.Equal(mailboxes[0].Name(), "INBOX")
 }
 
 func TestClientFetchAllInboxMessages(t *testing.T) {
