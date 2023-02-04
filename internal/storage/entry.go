@@ -98,6 +98,9 @@ func LoadEntries(s interface{}, entries []Entry) error {
 func convertToEntries(tableName string, ownerID, rowID uint32, v reflect.Value, includeData bool) []Entry {
 	entries := []Entry{}
 
+	if v.Kind() == reflect.Pointer {
+		v = v.Elem()
+	}
 	for i := 0; i < v.NumField(); i++ {
 		vv := reflect.Indirect(v)
 		f := vv.Type().Field(i)
