@@ -20,21 +20,13 @@ type Mailboxes struct {
 }
 
 func (r *Mailboxes) Save(accountID uint32, mailbox *models.Mailbox) error {
+	ownerID := accountID
 	rowID, err := r.nextRowID()
 	if err != nil {
 		return err
 	}
 
-	entries := storage.ConvertToEntries(mailboxesTableName, accountID, rowID, *mailbox)
-	for _, e := range entries {
-		if err := storage.Store(r.DB, e); err != nil {
-			return err
-		}
-	}
-
-	mailbox.ID = rowID
-
-	return nil
+	return saveValue(r.DB, r.tableName(), rowID, ownerID, mailbox)
 }
 
 func (r *Mailboxes) GetByID(rowID uint32) (models.Mailbox, error) {

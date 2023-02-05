@@ -16,21 +16,25 @@ type GenericRepo struct {
 	seq       *badger.Sequence
 }
 
-func (r *GenericRepo) Save(ownerID uint32, v Value) error {
-	rowID, err := r.nextRowID()
-	if err != nil {
-		return err
-	}
-
-	entries := storage.ConvertToEntries(r.TableName, ownerID, rowID, v)
+func saveValue(db storage.DB, tableName string, rowID, ownerID uint32, v Value) error {
+	entries := storage.ConvertToEntries(tableName, ownerID, rowID, v)
 	for _, e := range entries {
-		if err := storage.Store(r.DB, e); err != nil {
+		if err := storage.Store(db, e); err != nil {
 			return err
 		}
 	}
 
 	v.SetID(rowID)
 	return nil
+}
+
+func (r *GenericRepo) Save(ownerID uint32, v Value) error {
+	rowID, err := r.nextRowID()
+	if err != nil {
+		return err
+	}
+
+	return saveValue(r.DB, r.TableName, rowID, ownerID, v)
 }
 
 func (r *GenericRepo) nextRowID() (uint32, error) {
