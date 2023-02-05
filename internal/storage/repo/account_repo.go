@@ -21,16 +21,7 @@ func (r *Accounts) Save(user *models.Account) error {
 		return err
 	}
 
-	entries := storage.ConvertToEntries(accountsTableName, 0, rowID, *user)
-	for _, e := range entries {
-		if err := storage.Store(r.DB, e); err != nil {
-			return err
-		}
-	}
-
-	user.ID = uint32(rowID)
-
-	return nil
+	return saveValue(r.DB, r.tableName(), rowID, 0, user)
 }
 
 func (r *Accounts) GetByID(rowID uint32) (models.Account, error) {

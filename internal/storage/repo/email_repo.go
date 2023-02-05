@@ -16,21 +16,13 @@ type Emails struct {
 }
 
 func (r *Emails) Save(accountID uint32, email *models.Email) error {
+	ownerID := accountID
 	rowID, err := r.nextRowID()
 	if err != nil {
 		return err
 	}
 
-	entries := storage.ConvertToEntries(emailsTableName, accountID, rowID, *email)
-	for _, e := range entries {
-		if err := storage.Store(r.DB, e); err != nil {
-			return err
-		}
-	}
-
-	email.ID = rowID
-
-	return nil
+	return saveValue(r.DB, r.tableName(), rowID, ownerID, email)
 }
 
 func (r *Emails) GetByID(rowID uint32) (models.Email, error) {
