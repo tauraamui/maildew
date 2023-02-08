@@ -12,6 +12,8 @@ import (
 	"github.com/tauraamui/xerror/errgroup"
 )
 
+var ErrClientNotConnected error = errors.New("client is not connected")
+
 type MessageUID uint32
 
 type MessageHeader struct {
@@ -57,7 +59,7 @@ func (c *client) Connect(address string, account models.Account) error {
 
 func (c client) checkConnected() error {
 	if c.client == nil {
-		return errors.New("client is not connected")
+		return ErrClientNotConnected
 	}
 
 	// TODO:(tauraamui) -> figure out how to best check logged out channel is closed
@@ -170,11 +172,12 @@ func (c client) fetchAllMessageUIDs(mailbox Mailbox) ([]MessageUID, error) {
 }
 
 func (c client) Close() error {
-	errs := errgroup.I{}
 	if c.client != nil {
+		errs := errgroup.I{}
 		errs.Append(c.client.Logout())
 		errs.Append(c.client.Close())
+		return errs.ToErrOrNil()
 	}
 
-	return errs.ToErrOrNil()
+	return ErrClientNotConnected
 }

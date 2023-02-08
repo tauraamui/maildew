@@ -43,7 +43,24 @@ func TestClientConnectToLocalMockServer(t *testing.T) {
 }
 
 func TestClientMethodsProtectedIfNoConnection(t *testing.T) {
-	t.Skip()
+	is := is.New(t)
+
+	client := mail.NewClient(storage.DB{})
+	is.True(client != nil)
+
+	mb, err := client.FetchMailbox("INBOX", true)
+	is.Equal(mb, nil)
+	is.True(err != nil)
+	is.Equal(err, mail.ErrClientNotConnected)
+
+	mbs, err := client.FetchAllMailboxes()
+	is.Equal(mbs, nil)
+	is.True(err != nil)
+	is.Equal(err, mail.ErrClientNotConnected)
+
+	err = client.Close()
+	is.True(err != nil)
+	is.Equal(err, mail.ErrClientNotConnected)
 }
 
 func TestClientFetchMailboxes(t *testing.T) {
@@ -122,6 +139,7 @@ func setupClientConnection() (mail.Client, error, func() error) {
 	return client, nil, func() error {
 		errs := errgroup.I{}
 
+		errs.Append(client.Close())
 		errs.Append(l.Close())
 		errs.Append(shutdown())
 		return errs.ToErrOrNil()
