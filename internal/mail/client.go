@@ -9,6 +9,7 @@ import (
 	imapclient "github.com/emersion/go-imap/client"
 	"github.com/tauraamui/maildew/internal/storage"
 	"github.com/tauraamui/maildew/internal/storage/models"
+	"github.com/tauraamui/xerror/errgroup"
 )
 
 type MessageUID uint32
@@ -52,6 +53,9 @@ func (c client) checkConnected() error {
 	if c.client == nil {
 		return errors.New("client is not connected")
 	}
+
+	// TODO:(tauraamui) -> figure out how to best check logged out channel is closed
+
 	return nil
 }
 
@@ -160,8 +164,11 @@ func (c client) fetchAllMessageUIDs(mailbox Mailbox) ([]MessageUID, error) {
 }
 
 func (c client) Close() error {
+	errs := errgroup.I{}
 	if c.client != nil {
-		return c.client.Close()
+		errs.Append(c.client.Logout())
+		errs.Append(c.client.Close())
 	}
-	return nil
+
+	return errs.ToErrOrNil()
 }
