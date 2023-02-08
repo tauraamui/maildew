@@ -24,7 +24,11 @@ benchmark:
 
 .PHONY: coverage
 coverage:
-	go test -coverpkg=./... -coverprofile=profile.cov ./... && go tool cover -func profile.cov && rm profile.cov
+	go test -coverpkg=./... -coverprofile=coverage.out ./... && go tool cover -func coverage.out && rm coverage.out
+
+.PHONY: coverage-persist
+coverage-persist:
+	go test -coverpkg=./... -coverprofile=coverage.out ./... && go tool cover -func coverage.out
 
 .PHONY: install-gotestsum
 install-gotestsum:
