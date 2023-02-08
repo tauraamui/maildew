@@ -3,8 +3,11 @@ package mail
 // TODO:(tauraamui) implement client, decide on the interface etc.,
 
 import (
+	"errors"
+
 	"github.com/emersion/go-imap"
 	imapclient "github.com/emersion/go-imap/client"
+	"github.com/tauraamui/maildew/internal/storage"
 	"github.com/tauraamui/maildew/internal/storage/models"
 )
 
@@ -30,6 +33,10 @@ type MessageFetcher interface {
 	fetchAllMessageUIDs(Mailbox) ([]MessageUID, error)
 }
 
+func NewClient(db storage.DB) Client {
+	return client{db: db}
+}
+
 func Connect(address string, account models.Account) (Client, error) {
 	c, err := imapclient.Dial(address)
 	if err := c.Login(account.Email, account.Password); err != nil {
@@ -41,12 +48,24 @@ func Connect(address string, account models.Account) (Client, error) {
 	}, err
 }
 
+func (c client) checkConnected() error {
+	if c.client == nil {
+		return errors.New("client is not connected")
+	}
+	return nil
+}
+
 type client struct {
+	db      storage.DB
 	client  *imapclient.Client
 	account models.Account
 }
 
 func (c client) FetchMailbox(name string, ro bool) (Mailbox, error) {
+	if err := c.checkConnected(); err != nil {
+		return nil, err
+	}
+
 	m, err := c.client.Select(name, ro)
 	if err != nil {
 		return nil, err
@@ -56,6 +75,10 @@ func (c client) FetchMailbox(name string, ro bool) (Mailbox, error) {
 }
 
 func (c client) FetchAllMailboxes() ([]Mailbox, error) {
+	if err := c.checkConnected(); err != nil {
+		return nil, err
+	}
+
 	mailboxesChan := make(chan *imap.MailboxInfo, 10)
 	done := make(chan error, 1)
 
@@ -72,6 +95,10 @@ func (c client) FetchAllMailboxes() ([]Mailbox, error) {
 }
 
 func (c client) fetchAllMessages(mailbox Mailbox) ([]Message, error) {
+	if err := c.checkConnected(); err != nil {
+		return nil, err
+	}
+
 	mb, err := c.client.Select(mailbox.Name(), true)
 	if err != nil {
 		return nil, err
@@ -101,6 +128,10 @@ func (c client) fetchAllMessages(mailbox Mailbox) ([]Message, error) {
 }
 
 func (c client) fetchAllMessageUIDs(mailbox Mailbox) ([]MessageUID, error) {
+	if err := c.checkConnected(); err != nil {
+		return nil, err
+	}
+
 	mb, err := c.client.Select(mailbox.Name(), true)
 	if err != nil {
 		return nil, err
@@ -129,5 +160,8 @@ func (c client) fetchAllMessageUIDs(mailbox Mailbox) ([]MessageUID, error) {
 }
 
 func (c client) Close() error {
-	return c.client.Close()
+	if c.client != nil {
+		return c.client.Close()
+	}
+	return nil
 }
