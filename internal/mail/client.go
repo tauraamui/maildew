@@ -23,6 +23,7 @@ type Message struct {
 }
 
 type Client interface {
+	Connect(address string, account models.Account) error
 	FetchMailbox(string, bool) (Mailbox, error)
 	FetchAllMailboxes() ([]Mailbox, error)
 	MessageFetcher
@@ -35,18 +36,23 @@ type MessageFetcher interface {
 }
 
 func NewClient(db storage.DB) Client {
-	return client{db: db}
+	return &client{db: db}
 }
 
-func Connect(address string, account models.Account) (Client, error) {
-	c, err := imapclient.Dial(address)
-	if err := c.Login(account.Email, account.Password); err != nil {
-		return nil, err
+func (c *client) Connect(address string, account models.Account) error {
+	cc, err := imapclient.Dial(address)
+	if err != nil {
+		return err
 	}
-	return client{
-		client:  c,
-		account: account,
-	}, err
+
+	if err := cc.Login(account.Email, account.Password); err != nil {
+		return err
+	}
+
+	c.client = cc
+	c.account = account
+
+	return nil
 }
 
 func (c client) checkConnected() error {
