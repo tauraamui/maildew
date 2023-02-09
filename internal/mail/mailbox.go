@@ -9,16 +9,12 @@ type Mailbox interface {
 }
 
 type mailbox struct {
-	mf      MessageFetcher
+	mf      messageFetcher
 	account models.Account
 	name    string
 }
 
-func NewMailbox(name string, owner models.Account, mf MessageFetcher) Mailbox {
-	return newMailbox(name, owner, mf)
-}
-
-func newMailbox(name string, owner models.Account, mf MessageFetcher) Mailbox {
+func newMailbox(name string, owner models.Account, mf messageFetcher) Mailbox {
 	return mailbox{mf, owner, name}
 }
 

@@ -28,11 +28,11 @@ type Client interface {
 	Connect(address string, account models.Account) error
 	FetchMailbox(string, bool) (Mailbox, error)
 	FetchAllMailboxes() ([]Mailbox, error)
-	MessageFetcher
+	messageFetcher
 	Close() error
 }
 
-type MessageFetcher interface {
+type messageFetcher interface {
 	fetchAllMessages(Mailbox) ([]Message, error)
 	fetchAllMessageUIDs(Mailbox) ([]MessageUID, error)
 }
