@@ -4,5 +4,5 @@ import (
 	"testing"
 )
 
-func TestFetchAllMessagesSuccess(t *testing.T) {
+func TestFetchAllMessagesSyncsWithStorage(t *testing.T) {
 }
