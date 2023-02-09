@@ -83,7 +83,7 @@ func (c client) FetchMailbox(name string, ro bool) (Mailbox, error) {
 		return nil, err
 	}
 
-	return newMailbox(m.Name, c.account, c), nil
+	return newMailbox(c.db, m.Name, c.account, c), nil
 }
 
 func (c client) FetchAllMailboxes() ([]Mailbox, error) {
@@ -100,7 +100,7 @@ func (c client) FetchAllMailboxes() ([]Mailbox, error) {
 	}()
 
 	for m := range mailboxesChan {
-		mailboxes = append(mailboxes, newMailbox(m.Name, c.account, c))
+		mailboxes = append(mailboxes, newMailbox(c.db, m.Name, c.account, c))
 	}
 
 	return mailboxes, <-done

@@ -1,6 +1,9 @@
 package mail
 
-import "github.com/tauraamui/maildew/internal/storage/models"
+import (
+	"github.com/tauraamui/maildew/internal/storage"
+	"github.com/tauraamui/maildew/internal/storage/models"
+)
 
 type Mailbox interface {
 	Name() string
@@ -9,13 +12,14 @@ type Mailbox interface {
 }
 
 type mailbox struct {
+	db      storage.DB
 	mf      messageFetcher
 	account models.Account
 	name    string
 }
 
-func newMailbox(name string, owner models.Account, mf messageFetcher) Mailbox {
-	return mailbox{mf, owner, name}
+func newMailbox(db storage.DB, name string, owner models.Account, mf messageFetcher) Mailbox {
+	return mailbox{db, mf, owner, name}
 }
 
 func (m mailbox) Name() string {
