@@ -29,12 +29,17 @@ type Client interface {
 	FetchMailbox(string, bool) (Mailbox, error)
 	FetchAllMailboxes() ([]Mailbox, error)
 	messageFetcher
+	messageDeleter
 	Close() error
 }
 
 type messageFetcher interface {
 	fetchAllMessages(Mailbox) ([]Message, error)
 	fetchAllMessageUIDs(Mailbox) ([]MessageUID, error)
+}
+
+type messageDeleter interface {
+	deleteMessageByUID() // TODO:(tauraamui) -> implement
 }
 
 func NewClient(db storage.DB) Client {
