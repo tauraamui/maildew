@@ -1,6 +1,8 @@
 package repo
 
 import (
+	"errors"
+
 	"github.com/dgraph-io/badger/v3"
 	"github.com/tauraamui/maildew/internal/storage"
 	"github.com/tauraamui/maildew/internal/storage/models"
@@ -84,6 +86,11 @@ func (r *Emails) GetAll(accountID uint32) ([]models.Email, error) {
 	}
 
 	return emails, nil
+}
+
+func (r *Emails) Del(uid uint32) error {
+	// TODO:(tauraamui) -> remove email from storage
+	return errors.New("not implemented")
 }
 
 func (r *Emails) tableName() string {
