@@ -2,6 +2,7 @@ package mock
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/emersion/go-imap"
@@ -10,6 +11,14 @@ import (
 
 type Backend struct {
 	users map[string]*user
+}
+
+func (be *Backend) RegisterUser(username, password string) {
+	if be.users == nil {
+		be.users = map[string]*user{}
+	}
+	be.users[username] = &user{username: username, password: password}
+	fmt.Printf("mock users: %v\n", be.users[username])
 }
 
 func (be *Backend) Login(_ *imap.ConnInfo, username, password string) (backend.User, error) {
