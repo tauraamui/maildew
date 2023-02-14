@@ -41,8 +41,8 @@ func NewClient(db storage.DB) Client {
 	return &client{db: db}
 }
 
-func (c *client) Connect(address string, account models.Account) error {
-	cc, err := imapclient.Dial(address)
+func (c *client) Connect(ipaddress string, account models.Account) error {
+	cc, err := imapclient.Dial(ipaddress)
 	if err != nil {
 		return err
 	}
