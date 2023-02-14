@@ -17,3 +17,4 @@ debug.log
 mail.db
 builds/dew
 .mailkey
+*.sess
