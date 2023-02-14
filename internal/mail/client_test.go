@@ -154,8 +154,15 @@ func setupListener() (net.Listener, error) {
 	return l, nil
 }
 
-func startLocalServer(l net.Listener) (error, func() error) {
-	s := server.New(mock.New())
+func startLocalServer(l net.Listener, users ...models.Account) (error, func() error) {
+	mockBackend := mock.New()
+
+	if users != nil {
+		for _, u := range users {
+			mockBackend.RegisterUser(u.Email, u.Password)
+		}
+	}
+	s := server.New(mockBackend)
 	s.AllowInsecureAuth = true
 
 	go s.Serve(l)
