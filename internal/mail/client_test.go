@@ -5,6 +5,7 @@ import (
 	"net"
 	"testing"
 
+	"github.com/emersion/go-imap/backend"
 	"github.com/emersion/go-imap/server"
 	"github.com/matryer/is"
 	"github.com/tauraamui/maildew/internal/mail"
@@ -152,6 +153,15 @@ func setupListener() (net.Listener, error) {
 		return nil, fmt.Errorf("cannot listen: %w", err)
 	}
 	return l, nil
+}
+
+func startLocalServerWithBackend(l net.Listener, backend backend.Backend) (error, func() error) {
+	s := server.New(backend)
+	s.AllowInsecureAuth = true
+
+	go s.Serve(l)
+
+	return nil, s.Close
 }
 
 func startLocalServer(l net.Listener, users ...models.Account) (error, func() error) {

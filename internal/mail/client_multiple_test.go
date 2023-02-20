@@ -5,6 +5,7 @@ import (
 
 	"github.com/matryer/is"
 	"github.com/tauraamui/maildew/internal/mail"
+	"github.com/tauraamui/maildew/internal/mail/mock"
 	"github.com/tauraamui/maildew/internal/storage"
 	"github.com/tauraamui/maildew/internal/storage/models"
 )
@@ -16,12 +17,12 @@ func TestClientConnectToMultipleAccounts(t *testing.T) {
 	is.NoErr(err) // error setting up the net listener
 	defer l.Close()
 
-	err, shutdown := startLocalServer(
-		l,
-		models.Account{Email: "fake1@place.com", Password: "fakepass"},
-		models.Account{Email: "fake2@place.com", Password: "secondfakepass"},
-		models.Account{Email: "fake3@place.com", Password: "thirdfakepass"},
-	)
+	backend := mock.Backend{}
+	backend.RegisterUser("fake1@place.com", "fakepass")
+	backend.RegisterUser("fake2@place.com", "secondfakepass")
+	backend.RegisterUser("fake3@place.com", "thirdfakepass")
+
+	err, shutdown := startLocalServerWithBackend(l, &backend)
 	is.NoErr(err)
 
 	defer func() {
