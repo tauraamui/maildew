@@ -36,8 +36,8 @@ func TestClientConnectToLocalMockServer(t *testing.T) {
 	addr := l.Addr().String()
 
 	client := mail.NewClient(storage.DB{})
-	err = client.Connect(addr, models.Account{
-		Email: "username", Password: "password",
+	err = client.Connect(addr, mail.Account{
+		Username: "username", Password: "password",
 	})
 	is.NoErr(err) // error connecting to imap server
 	is.True(client != nil)
@@ -49,12 +49,12 @@ func TestClientMethodsProtectedIfNoConnection(t *testing.T) {
 	client := mail.NewClient(storage.DB{})
 	is.True(client != nil)
 
-	mb, err := client.FetchMailbox("INBOX", true)
+	mb, err := client.FetchMailbox(mail.Account{}, "INBOX", true)
 	is.Equal(mb, nil)
 	is.True(err != nil)
 	is.Equal(err, mail.ErrClientNotConnected)
 
-	mbs, err := client.FetchAllMailboxes()
+	mbs, err := client.FetchAllMailboxes(mail.Account{})
 	is.Equal(mbs, nil)
 	is.True(err != nil)
 	is.Equal(err, mail.ErrClientNotConnected)
@@ -72,7 +72,7 @@ func TestClientFetchMailboxes(t *testing.T) {
 	is.NoErr(err)          // error connecting to imap server
 	is.True(client != nil) // ensure client is not nil
 
-	mailboxes, err := client.FetchAllMailboxes()
+	mailboxes, err := client.FetchAllMailboxes(mail.Account{Username: "username"})
 	is.NoErr(err) // error fetching mailboxes
 
 	is.True(len(mailboxes) > 0)
@@ -87,7 +87,7 @@ func TestClientFetchAllInboxMessages(t *testing.T) {
 	is.NoErr(err)          // error connecting to imap server
 	is.True(client != nil) // ensure client is not nil
 
-	mb, err := client.FetchMailbox("INBOX", true)
+	mb, err := client.FetchMailbox(mail.Account{Username: "username"}, "INBOX", true)
 	is.NoErr(err) // error fetching mailbox of INBOX name
 	msgs, err := mb.FetchAllMessages()
 	is.NoErr(err)                                                               // error fetching inbox messages
@@ -102,7 +102,7 @@ func TestClientFetchAllInboxMessageUIDs(t *testing.T) {
 	is.NoErr(err)
 	is.True(client != nil)
 
-	mb, err := client.FetchMailbox("INBOX", true)
+	mb, err := client.FetchMailbox(mail.Account{Username: "username"}, "INBOX", true)
 	is.NoErr(err) // error fetching mailbox of INBOX name
 	uids, err := mb.FetchAllMessageUIDs()
 	is.NoErr(err)
@@ -127,7 +127,7 @@ func setupClientConnection() (mail.Client, error, func() error) {
 	addr := l.Addr().String()
 
 	client := mail.NewClient(storage.DB{})
-	if err := client.Connect(addr, models.Account{Email: "username", Password: "password"}); err != nil {
+	if err := client.Connect(addr, mail.Account{Username: "username", Password: "password"}); err != nil {
 		return nil, err, func() error {
 			errs := errgroup.I{}
 

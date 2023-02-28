@@ -7,7 +7,6 @@ import (
 	"github.com/tauraamui/maildew/internal/mail"
 	"github.com/tauraamui/maildew/internal/mail/mock"
 	"github.com/tauraamui/maildew/internal/storage"
-	"github.com/tauraamui/maildew/internal/storage/models"
 )
 
 func TestClientConnectToMultipleAccounts(t *testing.T) {
@@ -34,18 +33,18 @@ func TestClientConnectToMultipleAccounts(t *testing.T) {
 	client := mail.NewClient(storage.DB{})
 	is.True(client != nil)
 
-	err = client.Connect(addr, models.Account{
-		Email: "fake1@place.com", Password: "fakepass",
+	err = client.Connect(addr, mail.Account{
+		Username: "fake1@place.com", Password: "fakepass",
 	})
 	is.NoErr(err) // error connecting to imap server
 
-	err = client.Connect(addr, models.Account{
-		Email: "fake2@place.com", Password: "secondfakepass",
+	err = client.Connect(addr, mail.Account{
+		Username: "fake2@place.com", Password: "secondfakepass",
 	})
 	is.NoErr(err) // error connecting to imap server
 
-	err = client.Connect(addr, models.Account{
-		Email: "fake3@place.com", Password: "thirdfakepass",
+	err = client.Connect(addr, mail.Account{
+		Username: "fake3@place.com", Password: "thirdfakepass",
 	})
 	is.NoErr(err) // error connecting to imap server
 }

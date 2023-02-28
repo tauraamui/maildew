@@ -8,7 +8,6 @@ import (
 	"github.com/emersion/go-imap"
 	imapclient "github.com/emersion/go-imap/client"
 	"github.com/tauraamui/maildew/internal/storage"
-	"github.com/tauraamui/maildew/internal/storage/models"
 	"github.com/tauraamui/xerror/errgroup"
 )
 
@@ -25,69 +24,71 @@ type Message struct {
 }
 
 type Client interface {
-	Connect(address string, account models.Account) error
-	FetchMailbox(string, bool) (Mailbox, error)
-	FetchAllMailboxes() ([]Mailbox, error)
+	Connect(address string, account Account) error
+	FetchMailbox(Account, string, bool) (Mailbox, error)
+	FetchAllMailboxes(Account) ([]Mailbox, error)
 	messageFetcher
 	Close() error
 }
 
 type messageFetcher interface {
-	fetchAllMessages(Mailbox) ([]Message, error)
-	fetchAllMessageUIDs(Mailbox) ([]MessageUID, error)
+	fetchAllMessages(Account, Mailbox) ([]Message, error)
+	fetchAllMessageUIDs(Account, Mailbox) ([]MessageUID, error)
 }
 
 func NewClient(db storage.DB) Client {
 	return &client{db: db}
 }
 
-func (c *client) Connect(ipaddress string, account models.Account) error {
+func (c *client) Connect(ipaddress string, account Account) error {
 	cc, err := imapclient.Dial(ipaddress)
 	if err != nil {
 		return err
 	}
 
-	if err := cc.Login(account.Email, account.Password); err != nil {
+	if err := cc.Login(account.Username, account.Password); err != nil {
 		return err
 	}
 
-	c.client = cc
-	c.account = account
+	if c.loggedInAccounts == nil {
+		c.loggedInAccounts = make(map[string]*imapclient.Client)
+	}
+	c.loggedInAccounts[account.Username] = cc
 
 	return nil
 }
 
-func (c client) checkConnected() error {
-	if c.client == nil {
-		return ErrClientNotConnected
+func (c client) getConnection(username string) (*imapclient.Client, error) {
+	client, ok := c.loggedInAccounts[username]
+	if !ok {
+		return nil, ErrClientNotConnected
 	}
 
-	// TODO:(tauraamui) -> figure out how to best check logged out channel is closed
-
-	return nil
+	return client, nil
 }
 
 type client struct {
-	db      storage.DB
-	client  *imapclient.Client
-	account models.Account
+	db               storage.DB
+	loggedInAccounts map[string]*imapclient.Client
 }
 
-func (c client) FetchMailbox(name string, ro bool) (Mailbox, error) {
-	if err := c.checkConnected(); err != nil {
-		return nil, err
-	}
-
-	m, err := c.client.Select(name, ro)
+func (c client) FetchMailbox(acc Account, name string, ro bool) (Mailbox, error) {
+	conn, err := c.getConnection(acc.Username)
 	if err != nil {
 		return nil, err
 	}
 
-	return newMailbox(c.db, m.Name, c.account, c), nil
+	m, err := conn.Select(name, ro)
+	if err != nil {
+		return nil, err
+	}
+
+	return newMailbox(c.db, m.Name, acc, c), nil
 }
 
-func (c client) FetchAllMailboxes() ([]Mailbox, error) {
-	if err := c.checkConnected(); err != nil {
+func (c client) FetchAllMailboxes(acc Account) ([]Mailbox, error) {
+	conn, err := c.getConnection(acc.Username)
+	if err != nil {
 		return nil, err
 	}
 
@@ -96,22 +97,23 @@ func (c client) FetchAllMailboxes() ([]Mailbox, error) {
 
 	mailboxes := []Mailbox{}
 	go func() {
-		done <- c.client.List("", "*", mailboxesChan)
+		done <- conn.List("", "*", mailboxesChan)
 	}()
 
 	for m := range mailboxesChan {
-		mailboxes = append(mailboxes, newMailbox(c.db, m.Name, c.account, c))
+		mailboxes = append(mailboxes, newMailbox(c.db, m.Name, acc, c))
 	}
 
 	return mailboxes, <-done
 }
 
-func (c client) fetchAllMessages(mailbox Mailbox) ([]Message, error) {
-	if err := c.checkConnected(); err != nil {
+func (c client) fetchAllMessages(acc Account, mailbox Mailbox) ([]Message, error) {
+	conn, err := c.getConnection(acc.Username)
+	if err != nil {
 		return nil, err
 	}
 
-	mb, err := c.client.Select(mailbox.Name(), true)
+	mb, err := conn.Select(mailbox.Name(), true)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +126,7 @@ func (c client) fetchAllMessages(mailbox Mailbox) ([]Message, error) {
 	msgsch := make(chan *imap.Message, 1)
 	done := make(chan error, 1)
 	go func() {
-		done <- c.client.Fetch(&seqset, []imap.FetchItem{imap.FetchEnvelope}, msgsch)
+		done <- conn.Fetch(&seqset, []imap.FetchItem{imap.FetchEnvelope}, msgsch)
 	}()
 
 	msgs := []Message{}
@@ -139,12 +141,13 @@ func (c client) fetchAllMessages(mailbox Mailbox) ([]Message, error) {
 	return msgs, nil
 }
 
-func (c client) fetchAllMessageUIDs(mailbox Mailbox) ([]MessageUID, error) {
-	if err := c.checkConnected(); err != nil {
+func (c client) fetchAllMessageUIDs(acc Account, mailbox Mailbox) ([]MessageUID, error) {
+	conn, err := c.getConnection(acc.Username)
+	if err != nil {
 		return nil, err
 	}
 
-	mb, err := c.client.Select(mailbox.Name(), true)
+	mb, err := conn.Select(mailbox.Name(), true)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +159,7 @@ func (c client) fetchAllMessageUIDs(mailbox Mailbox) ([]MessageUID, error) {
 	done := make(chan error, 1)
 
 	go func() {
-		done <- c.client.Fetch(&seqset, []imap.FetchItem{imap.FetchUid}, msgsch)
+		done <- conn.Fetch(&seqset, []imap.FetchItem{imap.FetchUid}, msgsch)
 	}()
 
 	headers := []MessageUID{}
@@ -172,10 +175,12 @@ func (c client) fetchAllMessageUIDs(mailbox Mailbox) ([]MessageUID, error) {
 }
 
 func (c client) Close() error {
-	if c.client != nil {
+	if c.loggedInAccounts != nil {
 		errs := errgroup.I{}
-		errs.Append(c.client.Logout())
-		errs.Append(c.client.Close())
+		for _, client := range c.loggedInAccounts {
+			errs.Append(client.Logout())
+			errs.Append(client.Close())
+		}
 		return errs.ToErrOrNil()
 	}
 

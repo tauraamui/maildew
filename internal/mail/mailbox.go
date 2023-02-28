@@ -2,7 +2,6 @@ package mail
 
 import (
 	"github.com/tauraamui/maildew/internal/storage"
-	"github.com/tauraamui/maildew/internal/storage/models"
 )
 
 type Mailbox interface {
@@ -14,11 +13,11 @@ type Mailbox interface {
 type mailbox struct {
 	db      storage.DB
 	mf      messageFetcher
-	account models.Account
+	account Account
 	name    string
 }
 
-func newMailbox(db storage.DB, name string, owner models.Account, mf messageFetcher) Mailbox {
+func newMailbox(db storage.DB, name string, owner Account, mf messageFetcher) Mailbox {
 	return mailbox{db, mf, owner, name}
 }
 
@@ -29,9 +28,9 @@ func (m mailbox) Name() string {
 func (m mailbox) FetchAllMessages() ([]Message, error) {
 	// TODO:(tauraamui) here we should store/cache mailboxes to
 	//                  a prefix key set in the K/V DB
-	return m.mf.fetchAllMessages(m)
+	return m.mf.fetchAllMessages(m.account, m)
 }
 
 func (m mailbox) FetchAllMessageUIDs() ([]MessageUID, error) {
-	return m.mf.fetchAllMessageUIDs(m)
+	return m.mf.fetchAllMessageUIDs(m.account, m)
 }
