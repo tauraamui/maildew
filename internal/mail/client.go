@@ -7,7 +7,7 @@ import (
 
 	"github.com/emersion/go-imap"
 	imapclient "github.com/emersion/go-imap/client"
-	"github.com/tauraamui/maildew/internal/storage"
+	"github.com/tauraamui/maildew/internal/kvs"
 	"github.com/tauraamui/xerror/errgroup"
 )
 
@@ -36,7 +36,7 @@ type messageFetcher interface {
 	fetchAllMessageUIDs(Account, Mailbox) ([]MessageUID, error)
 }
 
-func NewClient(db storage.DB) Client {
+func NewClient(db kvs.DB) Client {
 	return &client{db: db}
 }
 
@@ -68,7 +68,7 @@ func (c client) getConnection(username string) (*imapclient.Client, error) {
 }
 
 type client struct {
-	db               storage.DB
+	db               kvs.DB
 	loggedInAccounts map[string]*imapclient.Client
 }
 

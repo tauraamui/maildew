@@ -1,8 +1,6 @@
 package mail
 
-import (
-	"github.com/tauraamui/maildew/internal/storage"
-)
+import "github.com/tauraamui/maildew/internal/kvs"
 
 type Mailbox interface {
 	Name() string
@@ -11,13 +9,13 @@ type Mailbox interface {
 }
 
 type mailbox struct {
-	db      storage.DB
+	db      kvs.DB
 	mf      messageFetcher
 	account Account
 	name    string
 }
 
-func newMailbox(db storage.DB, name string, owner Account, mf messageFetcher) Mailbox {
+func newMailbox(db kvs.DB, name string, owner Account, mf messageFetcher) Mailbox {
 	return mailbox{db, mf, owner, name}
 }
 

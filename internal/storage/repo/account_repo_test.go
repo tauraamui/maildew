@@ -7,13 +7,13 @@ import (
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/matryer/is"
-	"github.com/tauraamui/maildew/internal/storage"
+	"github.com/tauraamui/maildew/internal/kvs"
 	"github.com/tauraamui/maildew/internal/storage/models"
 	"github.com/tauraamui/maildew/internal/storage/repo"
 )
 
 func resolveRepo() (repo.Accounts, error) {
-	db, err := storage.NewMemDB()
+	db, err := kvs.NewMemDB()
 	if err != nil {
 		return repo.Accounts{}, err
 	}
@@ -96,7 +96,7 @@ func TestGetAllUsers(t *testing.T) {
 	is.Equal(second.Password, "gigioregioigr")
 }
 
-func insertContents(db storage.DB, cnts map[string][]byte) error {
+func insertContents(db kvs.DB, cnts map[string][]byte) error {
 	return db.Update(func(txn *badger.Txn) error {
 		for k, v := range cnts {
 			if err := txn.Set([]byte(k), v); err != nil {
@@ -107,7 +107,7 @@ func insertContents(db storage.DB, cnts map[string][]byte) error {
 	})
 }
 
-func compareContentsWithExpected(db storage.DB, exp map[string][]byte) error {
+func compareContentsWithExpected(db kvs.DB, exp map[string][]byte) error {
 	return db.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchSize = 10

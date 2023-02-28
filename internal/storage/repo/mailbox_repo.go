@@ -2,7 +2,7 @@ package repo
 
 import (
 	"github.com/dgraph-io/badger/v3"
-	"github.com/tauraamui/maildew/internal/storage"
+	"github.com/tauraamui/maildew/internal/kvs"
 	"github.com/tauraamui/maildew/internal/storage/models"
 )
 
@@ -15,7 +15,7 @@ const (
 //	messages, when saving a message it would just simply set the owner
 //	ID to be the mailboxes' ID
 type Mailboxes struct {
-	DB  storage.DB
+	DB  kvs.DB
 	seq *badger.Sequence
 }
 
@@ -33,13 +33,13 @@ func (r *Mailboxes) GetByID(rowID uint32) (models.Mailbox, error) {
 	mb := models.Mailbox{
 		ID: rowID,
 	}
-	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, rowID, mb)
+	blankEntries := kvs.ConvertToBlankEntries(r.tableName(), 0, rowID, mb)
 	for _, e := range blankEntries {
-		if err := storage.Get(r.DB, &e); err != nil {
+		if err := kvs.Get(r.DB, &e); err != nil {
 			return mb, err
 		}
 
-		if err := storage.LoadEntry(&mb, e); err != nil {
+		if err := kvs.LoadEntry(&mb, e); err != nil {
 			return mb, err
 		}
 	}
@@ -49,7 +49,7 @@ func (r *Mailboxes) GetByID(rowID uint32) (models.Mailbox, error) {
 func (r *Mailboxes) GetAll(accountID uint32) ([]models.Mailbox, error) {
 	mailboxes := make([]models.Mailbox, 1)
 
-	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, 0, mailboxes[0])
+	blankEntries := kvs.ConvertToBlankEntries(r.tableName(), 0, 0, mailboxes[0])
 	for _, ent := range blankEntries {
 		// iterate over all stored values for this entry
 		prefix := ent.PrefixKey()
@@ -72,7 +72,7 @@ func (r *Mailboxes) GetAll(accountID uint32) ([]models.Mailbox, error) {
 				}); err != nil {
 					return err
 				}
-				if err := storage.LoadEntry(&mailboxes[rows], ent); err != nil {
+				if err := kvs.LoadEntry(&mailboxes[rows], ent); err != nil {
 					return err
 				}
 				rows++

@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/matryer/is"
+	"github.com/tauraamui/maildew/internal/kvs"
 	"github.com/tauraamui/maildew/internal/mail"
 	"github.com/tauraamui/maildew/internal/mail/mock"
-	"github.com/tauraamui/maildew/internal/storage"
 )
 
 func TestClientConnectToMultipleAccounts(t *testing.T) {
@@ -30,7 +30,7 @@ func TestClientConnectToMultipleAccounts(t *testing.T) {
 
 	addr := l.Addr().String()
 
-	client := mail.NewClient(storage.DB{})
+	client := mail.NewClient(kvs.DB{})
 	is.True(client != nil)
 
 	err = client.Connect(addr, mail.Account{

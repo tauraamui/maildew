@@ -5,7 +5,7 @@ import (
 
 	"github.com/tauraamui/maildew/internal/config"
 	"github.com/tauraamui/maildew/internal/configdef"
-	"github.com/tauraamui/maildew/internal/storage"
+	"github.com/tauraamui/maildew/internal/kvs"
 	"github.com/tauraamui/maildew/internal/storage/repo"
 	"github.com/tauraamui/maildew/internal/tui"
 )
@@ -24,7 +24,7 @@ func main() {
 		panic(err)
 	}
 
-	db, err := storage.NewMemDB()
+	db, err := kvs.NewMemDB()
 	if err != nil {
 		panic(err)
 	}

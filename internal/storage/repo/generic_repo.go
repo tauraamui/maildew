@@ -2,7 +2,7 @@ package repo
 
 import (
 	"github.com/dgraph-io/badger/v3"
-	"github.com/tauraamui/maildew/internal/storage"
+	"github.com/tauraamui/maildew/internal/kvs"
 )
 
 type Value interface {
@@ -12,14 +12,14 @@ type Value interface {
 
 type GenericRepo struct {
 	TableName string
-	DB        storage.DB
+	DB        kvs.DB
 	seq       *badger.Sequence
 }
 
-func saveValue(db storage.DB, tableName string, rowID, ownerID uint32, v Value) error {
-	entries := storage.ConvertToEntries(tableName, ownerID, rowID, v)
+func saveValue(db kvs.DB, tableName string, rowID, ownerID uint32, v Value) error {
+	entries := kvs.ConvertToEntries(tableName, ownerID, rowID, v)
 	for _, e := range entries {
-		if err := storage.Store(db, e); err != nil {
+		if err := kvs.Store(db, e); err != nil {
 			return err
 		}
 	}

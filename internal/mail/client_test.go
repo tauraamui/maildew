@@ -8,9 +8,9 @@ import (
 	"github.com/emersion/go-imap/backend"
 	"github.com/emersion/go-imap/server"
 	"github.com/matryer/is"
+	"github.com/tauraamui/maildew/internal/kvs"
 	"github.com/tauraamui/maildew/internal/mail"
 	"github.com/tauraamui/maildew/internal/mail/mock"
-	"github.com/tauraamui/maildew/internal/storage"
 	"github.com/tauraamui/maildew/internal/storage/models"
 	"github.com/tauraamui/xerror/errgroup"
 )
@@ -35,7 +35,7 @@ func TestClientConnectToLocalMockServer(t *testing.T) {
 
 	addr := l.Addr().String()
 
-	client := mail.NewClient(storage.DB{})
+	client := mail.NewClient(kvs.DB{})
 	err = client.Connect(addr, mail.Account{
 		Username: "username", Password: "password",
 	})
@@ -46,7 +46,7 @@ func TestClientConnectToLocalMockServer(t *testing.T) {
 func TestClientMethodsProtectedIfNoConnection(t *testing.T) {
 	is := is.New(t)
 
-	client := mail.NewClient(storage.DB{})
+	client := mail.NewClient(kvs.DB{})
 	is.True(client != nil)
 
 	mb, err := client.FetchMailbox(mail.Account{}, "INBOX", true)
@@ -126,7 +126,7 @@ func setupClientConnection() (mail.Client, error, func() error) {
 
 	addr := l.Addr().String()
 
-	client := mail.NewClient(storage.DB{})
+	client := mail.NewClient(kvs.DB{})
 	if err := client.Connect(addr, mail.Account{Username: "username", Password: "password"}); err != nil {
 		return nil, err, func() error {
 			errs := errgroup.I{}

@@ -2,7 +2,7 @@ package repo
 
 import (
 	"github.com/dgraph-io/badger/v3"
-	"github.com/tauraamui/maildew/internal/storage"
+	"github.com/tauraamui/maildew/internal/kvs"
 	"github.com/tauraamui/maildew/internal/storage/models"
 )
 
@@ -11,7 +11,7 @@ const (
 )
 
 type Emails struct {
-	DB  storage.DB
+	DB  kvs.DB
 	seq *badger.Sequence
 }
 
@@ -29,13 +29,13 @@ func (r *Emails) GetByID(rowID uint32) (models.Email, error) {
 	acc := models.Email{
 		ID: rowID,
 	}
-	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, rowID, acc)
+	blankEntries := kvs.ConvertToBlankEntries(r.tableName(), 0, rowID, acc)
 	for _, e := range blankEntries {
-		if err := storage.Get(r.DB, &e); err != nil {
+		if err := kvs.Get(r.DB, &e); err != nil {
 			return acc, err
 		}
 
-		if err := storage.LoadEntry(&acc, e); err != nil {
+		if err := kvs.LoadEntry(&acc, e); err != nil {
 			return acc, err
 		}
 	}
@@ -44,13 +44,13 @@ func (r *Emails) GetByID(rowID uint32) (models.Email, error) {
 }
 
 // TODO:(tauraamui) really all of the generic "Getters" and "Setters" methods
-// of these repos are identical thanks to using the storage backend
+// of these repos are identical thanks to using the kvs backend
 // so should move each of these into using Go generics rather than
 // copying them for each type.
 func (r *Emails) GetAll(accountID uint32) ([]models.Email, error) {
 	emails := make([]models.Email, 1)
 
-	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, 0, emails[0])
+	blankEntries := kvs.ConvertToBlankEntries(r.tableName(), 0, 0, emails[0])
 	for _, ent := range blankEntries {
 		// iterate over all stored values for this entry
 		prefix := ent.PrefixKey()
@@ -73,7 +73,7 @@ func (r *Emails) GetAll(accountID uint32) ([]models.Email, error) {
 				}); err != nil {
 					return err
 				}
-				if err := storage.LoadEntry(&emails[rows], ent); err != nil {
+				if err := kvs.LoadEntry(&emails[rows], ent); err != nil {
 					return err
 				}
 				rows++

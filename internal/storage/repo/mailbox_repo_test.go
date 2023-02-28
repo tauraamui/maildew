@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"github.com/matryer/is"
-	"github.com/tauraamui/maildew/internal/storage"
+	"github.com/tauraamui/maildew/internal/kvs"
 	"github.com/tauraamui/maildew/internal/storage/models"
 	"github.com/tauraamui/maildew/internal/storage/repo"
 )
 
 func resolveMailboxRepo() (repo.Mailboxes, error) {
-	db, err := storage.NewMemDB()
+	db, err := kvs.NewMemDB()
 	if err != nil {
 		return repo.Mailboxes{}, err
 	}

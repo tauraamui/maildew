@@ -2,7 +2,7 @@ package repo
 
 import (
 	"github.com/dgraph-io/badger/v3"
-	"github.com/tauraamui/maildew/internal/storage"
+	"github.com/tauraamui/maildew/internal/kvs"
 	"github.com/tauraamui/maildew/internal/storage/models"
 )
 
@@ -11,7 +11,7 @@ const (
 )
 
 type Accounts struct {
-	DB  storage.DB
+	DB  kvs.DB
 	seq *badger.Sequence
 }
 
@@ -28,13 +28,13 @@ func (r *Accounts) GetByID(rowID uint32) (models.Account, error) {
 	acc := models.Account{
 		ID: uint32(rowID),
 	}
-	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, rowID, acc)
+	blankEntries := kvs.ConvertToBlankEntries(r.tableName(), 0, rowID, acc)
 	for _, e := range blankEntries {
-		if err := storage.Get(r.DB, &e); err != nil {
+		if err := kvs.Get(r.DB, &e); err != nil {
 			return acc, err
 		}
 
-		if err := storage.LoadEntry(&acc, e); err != nil {
+		if err := kvs.LoadEntry(&acc, e); err != nil {
 			return acc, err
 		}
 	}
@@ -45,7 +45,7 @@ func (r *Accounts) GetByID(rowID uint32) (models.Account, error) {
 func (r *Accounts) GetAll() ([]models.Account, error) {
 	accounts := []models.Account{}
 
-	blankEntries := storage.ConvertToBlankEntries(r.tableName(), 0, 0, models.Account{})
+	blankEntries := kvs.ConvertToBlankEntries(r.tableName(), 0, 0, models.Account{})
 	for _, ent := range blankEntries {
 		// iterate over all stored values for this entry
 		prefix := ent.PrefixKey()
@@ -69,7 +69,7 @@ func (r *Accounts) GetAll() ([]models.Account, error) {
 				}); err != nil {
 					return err
 				}
-				if err := storage.LoadEntry(&accounts[rows], ent); err != nil {
+				if err := kvs.LoadEntry(&accounts[rows], ent); err != nil {
 					return err
 				}
 				rows++
