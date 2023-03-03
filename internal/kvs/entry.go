@@ -35,9 +35,10 @@ func Store(db DB, e Entry) error {
 
 func Get(db DB, e *Entry) error {
 	return db.conn.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(e.Key())
+		lookupKey := e.Key()
+		item, err := txn.Get(lookupKey)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %s", strings.ToLower(err.Error()), lookupKey)
 		}
 
 		if err := item.Value(func(val []byte) error {
