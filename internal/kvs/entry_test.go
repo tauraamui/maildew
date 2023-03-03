@@ -13,6 +13,7 @@ func TestEntryStoreValuesInTable(t *testing.T) {
 	e := kvs.Entry{
 		TableName:  "users",
 		ColumnName: "email",
+		OwnerID:    11,
 		Data:       []byte{0x33},
 	}
 
@@ -34,12 +35,49 @@ func TestEntryStoreValuesInTable(t *testing.T) {
 	newEntry := kvs.Entry{
 		TableName:  e.TableName,
 		ColumnName: e.ColumnName,
+		OwnerID:    11,
 		RowID:      e.RowID,
 		Data:       nil,
 	}
 	is.NoErr(kvs.Get(db, &newEntry))
 
 	is.Equal(newEntry.Data, []byte{0x33})
+}
+
+func TestGettingEntryOutOfTableErrorIncorrectKey(t *testing.T) {
+	is := is.New(t)
+
+	e := kvs.Entry{
+		TableName:  "user",
+		ColumnName: "emailz",
+		OwnerID:    33,
+		Data:       []byte{0x33},
+	}
+
+	db, err := kvs.NewMemDB()
+	is.NoErr(err)
+	defer db.Close()
+
+	seq, err := db.GetSeq(e.PrefixKey(), 100)
+	is.NoErr(err) // error occurred on getting db sequence
+	defer seq.Release()
+
+	id, err := seq.Next()
+	is.NoErr(err) // error occurred when aquiring next iter value
+
+	e.RowID = uint32(id)
+
+	is.NoErr(kvs.Store(db, e)) // error occurred when calling store
+
+	newEntry := kvs.Entry{
+		TableName:  e.TableName,
+		ColumnName: e.ColumnName,
+		OwnerID:    11,
+		RowID:      e.RowID,
+		Data:       nil,
+	}
+	is.Equal(kvs.Get(db, &newEntry).Error(), "key not found: user.emailz.11.0")
+	is.Equal(newEntry.Data, nil)
 }
 
 func TestConvertToEntries(t *testing.T) {
