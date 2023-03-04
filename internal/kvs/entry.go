@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/dgraph-io/badger/v3"
+	"github.com/google/uuid"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -15,16 +16,25 @@ type Entry struct {
 	TableName  string
 	ColumnName string
 	OwnerID    uint32
+	OwnerUUID  uuid.UUID
 	RowID      uint32
 	Data       []byte
 }
 
 func (e Entry) PrefixKey() []byte {
-	return []byte(fmt.Sprintf("%s.%s.%d", e.TableName, e.ColumnName, e.OwnerID))
+	return []byte(fmt.Sprintf("%s.%s.%d", e.TableName, e.ColumnName, e.resolveOwnerID()))
 }
 
 func (e Entry) Key() []byte {
-	return []byte(fmt.Sprintf("%s.%s.%d.%d", e.TableName, e.ColumnName, e.OwnerID, e.RowID))
+	return []byte(fmt.Sprintf("%s.%s.%d.%d", e.TableName, e.ColumnName, e.resolveOwnerID(), e.RowID))
+}
+
+func (e Entry) resolveOwnerID() uint32 {
+	uuid := e.OwnerUUID.ID()
+	if uuid > 0 {
+		return uuid
+	}
+	return e.OwnerID
 }
 
 func Store(db DB, e Entry) error {
@@ -62,6 +72,11 @@ func ConvertToEntries(tableName string, ownerID, rowID uint32, x interface{}) []
 	return convertToEntries(tableName, ownerID, rowID, v, true)
 }
 
+func ConvertToEntriesWithUUID(tableName string, ownerID uuid.UUID, rowID uint32, x interface{}) []Entry {
+	v := reflect.ValueOf(x)
+	return convertToEntriesWithUUID(tableName, 0, rowID, ownerID, v, true)
+}
+
 func LoadEntry(s interface{}, entry Entry) error {
 	// Convert the interface value to a reflect.Value so we can access its fields
 	val := reflect.ValueOf(s).Elem()
@@ -95,8 +110,7 @@ func LoadEntries(s interface{}, entries []Entry) error {
 	return nil
 }
 
-// TODO:(tauraamui): come up with novel and well designed method of preserving full upper casing
-func convertToEntries(tableName string, ownerID, rowID uint32, v reflect.Value, includeData bool) []Entry {
+func convertToEntriesWithUUID(tableName string, ownerID, rowID uint32, ownerUUID uuid.UUID, v reflect.Value, includeData bool) []Entry {
 	entries := []Entry{}
 
 	if v.Kind() == reflect.Pointer {
@@ -115,6 +129,7 @@ func convertToEntries(tableName string, ownerID, rowID uint32, v reflect.Value, 
 			TableName:  tableName,
 			ColumnName: strings.ToLower(f.Name),
 			OwnerID:    ownerID,
+			OwnerUUID:  ownerUUID,
 			RowID:      rowID,
 		}
 
@@ -130,6 +145,11 @@ func convertToEntries(tableName string, ownerID, rowID uint32, v reflect.Value, 
 	}
 
 	return entries
+}
+
+// TODO:(tauraamui): come up with novel and well designed method of preserving full upper casing
+func convertToEntries(tableName string, ownerID, rowID uint32, v reflect.Value, includeData bool) []Entry {
+	return convertToEntriesWithUUID(tableName, ownerID, rowID, uuid.UUID{}, v, includeData)
 }
 
 func convertToBytes(i interface{}) ([]byte, error) {
