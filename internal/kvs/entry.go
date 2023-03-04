@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/dgraph-io/badger/v3"
@@ -16,25 +17,25 @@ type Entry struct {
 	TableName  string
 	ColumnName string
 	OwnerID    uint32
-	OwnerUUID  uuid.UUID
+	OwnerUUID  UUID
 	RowID      uint32
 	Data       []byte
 }
 
 func (e Entry) PrefixKey() []byte {
-	return []byte(fmt.Sprintf("%s.%s.%d", e.TableName, e.ColumnName, e.resolveOwnerID()))
+	return []byte(fmt.Sprintf("%s.%s.%s", e.TableName, e.ColumnName, e.resolveOwnerID()))
 }
 
 func (e Entry) Key() []byte {
-	return []byte(fmt.Sprintf("%s.%s.%d.%d", e.TableName, e.ColumnName, e.resolveOwnerID(), e.RowID))
+	return []byte(fmt.Sprintf("%s.%s.%s.%d", e.TableName, e.ColumnName, e.resolveOwnerID(), e.RowID))
 }
 
-func (e Entry) resolveOwnerID() uint32 {
-	uuid := e.OwnerUUID.ID()
-	if uuid > 0 {
-		return uuid
+func (e Entry) resolveOwnerID() string {
+	if ustr := e.OwnerUUID.String(); len(ustr) != 0 {
+		return ustr
 	}
-	return e.OwnerID
+
+	return strconv.Itoa(int(e.OwnerID))
 }
 
 func Store(db DB, e Entry) error {
@@ -72,7 +73,15 @@ func ConvertToEntries(tableName string, ownerID, rowID uint32, x interface{}) []
 	return convertToEntries(tableName, ownerID, rowID, v, true)
 }
 
-func ConvertToEntriesWithUUID(tableName string, ownerID uuid.UUID, rowID uint32, x interface{}) []Entry {
+type UUID interface {
+	String() string
+}
+
+type RootOwner struct{}
+
+func (o RootOwner) String() string { return "root" }
+
+func ConvertToEntriesWithUUID(tableName string, ownerID UUID, rowID uint32, x interface{}) []Entry {
 	v := reflect.ValueOf(x)
 	return convertToEntriesWithUUID(tableName, 0, rowID, ownerID, v, true)
 }
@@ -110,7 +119,7 @@ func LoadEntries(s interface{}, entries []Entry) error {
 	return nil
 }
 
-func convertToEntriesWithUUID(tableName string, ownerID, rowID uint32, ownerUUID uuid.UUID, v reflect.Value, includeData bool) []Entry {
+func convertToEntriesWithUUID(tableName string, ownerID, rowID uint32, ownerUUID UUID, v reflect.Value, includeData bool) []Entry {
 	entries := []Entry{}
 
 	if v.Kind() == reflect.Pointer {

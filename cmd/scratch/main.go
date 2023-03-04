@@ -19,8 +19,11 @@ type LocalAccountClone struct {
 	Username, Password string
 }
 
-type localBoxClone struct {
-	owner uuid.UUID
+type LocalBoxClone struct {
+	Owner     uuid.UUID
+	RemoteRef []byte
+	LocalRef  kvs.UUID
+	Name      string
 }
 
 func main() {
@@ -41,6 +44,10 @@ func main() {
 	}); err != nil {
 		log.Fatalf("unable to create local account in DB: %v\n", err)
 	}
+
+	if err := db.DumpToStdout(); err != nil {
+		log.Fatalf("unable to output in memory DB to stdout: %v\n", err)
+	}
 }
 
 // -------------------------------------------------------------------
@@ -58,7 +65,7 @@ func (r localAccountRepo) Save(acc LocalAccountClone) error {
 		return err
 	}
 
-	return saveValue(r.DB, r.tableName(), uuid.UUID{}, rowID, acc)
+	return saveValue(r.DB, r.tableName(), kvs.RootOwner{}, rowID, acc)
 }
 
 func (r localAccountRepo) tableName() string {
@@ -82,7 +89,7 @@ func (r *localAccountRepo) nextRowID() (uint32, error) {
 	return uint32(s), nil
 }
 
-func saveValue(db kvs.DB, tableName string, ownerID uuid.UUID, rowID uint32, v interface{}) error {
+func saveValue(db kvs.DB, tableName string, ownerID kvs.UUID, rowID uint32, v interface{}) error {
 	entries := kvs.ConvertToEntriesWithUUID(tableName, ownerID, rowID, v)
 	for _, e := range entries {
 		if err := kvs.Store(db, e); err != nil {
