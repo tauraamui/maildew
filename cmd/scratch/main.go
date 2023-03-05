@@ -62,7 +62,7 @@ func main() {
 
 	junk := LocalBoxClone{
 		Owner:     acc,
-		RemoteRef: []byte("whkotyor"),
+		RemoteRef: []byte("rgoiergo"),
 		LocalRef:  uuid.New(),
 		Name:      "JUNK",
 	}
