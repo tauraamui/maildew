@@ -75,13 +75,34 @@ func main() {
 		log.Fatalf("unable to store local box in DB: %v\n", err)
 	}
 
-	testMsg := LocalMessageClone{
-		RemoteRef: []byte("ykirgire"),
-		LocalRef:  uuid.New(),
-		Subject:   "RE: Testing testing 123!",
+	testMsgs := []LocalMessageClone{
+		{
+			RemoteRef: []byte("ykirgire"),
+			LocalRef:  uuid.New(),
+			Subject:   "RE: Testing testing 123!",
+		}, {
+			RemoteRef: []byte("hrthrtr"),
+			LocalRef:  uuid.New(),
+			Subject:   "Probably some spam.",
+		}, {
+
+			RemoteRef: []byte("wiergoerg"),
+			LocalRef:  uuid.New(),
+			Subject:   "Hot New Deals!",
+		},
 	}
 
-	if err := msgRepo.Save(inbox.LocalRef, testMsg); err != nil {
+	for _, testMsg := range testMsgs {
+		if err := msgRepo.Save(inbox.LocalRef, testMsg); err != nil {
+			log.Fatalf("unable to store local message in DB: %v\n", err)
+		}
+	}
+
+	if err := msgRepo.Save(junk.LocalRef, LocalMessageClone{
+		RemoteRef: []byte("rjgerigf"),
+		LocalRef:  uuid.New(),
+		Subject:   "Definitely some spam",
+	}); err != nil {
 		log.Fatalf("unable to store local message in DB: %v\n", err)
 	}
 
