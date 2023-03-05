@@ -25,6 +25,12 @@ type LocalBoxClone struct {
 	Name      string
 }
 
+type LocalMessageClone struct {
+	RemoteRef []byte
+	LocalRef  kvs.UUID
+	Subject   string
+}
+
 func main() {
 	log.Println("Experiment for trying to understand box storage in relation to mail and ownership.")
 
@@ -36,6 +42,7 @@ func main() {
 
 	accRepo := localAccountRepo{DB: db}
 	boxRepo := localBoxRepo{DB: db}
+	msgRepo := localMessageRepo{DB: db}
 
 	acc := LocalAccountClone{
 		RemoteRef: []byte("g594tjrio"),
@@ -68,6 +75,16 @@ func main() {
 		log.Fatalf("unable to store local box in DB: %v\n", err)
 	}
 
+	testMsg := LocalMessageClone{
+		RemoteRef: []byte("ykirgire"),
+		LocalRef:  uuid.New(),
+		Subject:   "RE: Testing testing 123!",
+	}
+
+	if err := msgRepo.Save(inbox.LocalRef, testMsg); err != nil {
+		log.Fatalf("unable to store local message in DB: %v\n", err)
+	}
+
 	if err := db.DumpToStdout(); err != nil {
 		log.Fatalf("unable to output in memory DB to stdout: %v\n", err)
 	}
@@ -94,6 +111,43 @@ func (r localBoxRepo) tableName() string {
 }
 
 func (r *localBoxRepo) nextRowID() (uint32, error) {
+	if r.seq == nil {
+		seq, err := r.DB.GetSeq([]byte(r.tableName()), 1)
+		if err != nil {
+			return 0, err
+		}
+		r.seq = seq
+	}
+
+	s, err := r.seq.Next()
+	if err != nil {
+		return 0, err
+	}
+
+	return uint32(s), nil
+}
+
+// -------------------------------------------------------------------
+
+type localMessageRepo struct {
+	DB  kvs.DB
+	seq *badger.Sequence
+}
+
+func (r localMessageRepo) Save(owner kvs.UUID, msg LocalMessageClone) error {
+	rowID, err := r.nextRowID()
+	if err != nil {
+		return err
+	}
+
+	return saveValue(r.DB, r.tableName(), owner, rowID, msg)
+}
+
+func (r localMessageRepo) tableName() string {
+	return "localmessages"
+}
+
+func (r *localMessageRepo) nextRowID() (uint32, error) {
 	if r.seq == nil {
 		seq, err := r.DB.GetSeq([]byte(r.tableName()), 1)
 		if err != nil {
