@@ -20,7 +20,6 @@ type LocalAccountClone struct {
 }
 
 type LocalBoxClone struct {
-	Owner     LocalAccountClone
 	RemoteRef []byte
 	LocalRef  kvs.UUID
 	Name      string
@@ -50,24 +49,22 @@ func main() {
 	}
 
 	inbox := LocalBoxClone{
-		Owner:     acc,
 		RemoteRef: []byte("whkotyor"),
 		LocalRef:  uuid.New(),
 		Name:      "INBOX",
 	}
 
-	if err := boxRepo.Save(inbox); err != nil {
+	if err := boxRepo.Save(acc.LocalRef, inbox); err != nil {
 		log.Fatalf("unable to store local box in DB: %v\n", err)
 	}
 
 	junk := LocalBoxClone{
-		Owner:     acc,
 		RemoteRef: []byte("rgoiergo"),
 		LocalRef:  uuid.New(),
 		Name:      "JUNK",
 	}
 
-	if err := boxRepo.Save(junk); err != nil {
+	if err := boxRepo.Save(acc.LocalRef, junk); err != nil {
 		log.Fatalf("unable to store local box in DB: %v\n", err)
 	}
 
@@ -83,13 +80,13 @@ type localBoxRepo struct {
 	seq *badger.Sequence
 }
 
-func (r localBoxRepo) Save(box LocalBoxClone) error {
+func (r localBoxRepo) Save(owner kvs.UUID, box LocalBoxClone) error {
 	rowID, err := r.nextRowID()
 	if err != nil {
 		return err
 	}
 
-	return saveValue(r.DB, r.tableName(), box.Owner.LocalRef, rowID, box)
+	return saveValue(r.DB, r.tableName(), owner, rowID, box)
 }
 
 func (r localBoxRepo) tableName() string {
