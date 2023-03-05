@@ -20,7 +20,7 @@ type LocalAccountClone struct {
 }
 
 type LocalBoxClone struct {
-	Owner     uuid.UUID
+	Owner     LocalAccountClone
 	RemoteRef []byte
 	LocalRef  kvs.UUID
 	Name      string
@@ -36,13 +36,39 @@ func main() {
 	defer db.Close()
 
 	accRepo := localAccountRepo{DB: db}
-	if err := accRepo.Save(LocalAccountClone{
+	boxRepo := localBoxRepo{DB: db}
+
+	acc := LocalAccountClone{
 		RemoteRef: []byte("g594tjrio"),
 		LocalRef:  uuid.New(),
 		Username:  "localacccopy",
 		Password:  "notrelevant",
-	}); err != nil {
+	}
+
+	if err := accRepo.Save(acc); err != nil {
 		log.Fatalf("unable to create local account in DB: %v\n", err)
+	}
+
+	inbox := LocalBoxClone{
+		Owner:     acc,
+		RemoteRef: []byte("whkotyor"),
+		LocalRef:  uuid.New(),
+		Name:      "INBOX",
+	}
+
+	if err := boxRepo.Save(inbox); err != nil {
+		log.Fatalf("unable to store local box in DB: %v\n", err)
+	}
+
+	junk := LocalBoxClone{
+		Owner:     acc,
+		RemoteRef: []byte("whkotyor"),
+		LocalRef:  uuid.New(),
+		Name:      "JUNK",
+	}
+
+	if err := boxRepo.Save(junk); err != nil {
+		log.Fatalf("unable to store local box in DB: %v\n", err)
 	}
 
 	if err := db.DumpToStdout(); err != nil {
@@ -52,12 +78,47 @@ func main() {
 
 // -------------------------------------------------------------------
 
-type localAccountRepo struct {
+type localBoxRepo struct {
 	DB  kvs.DB
 	seq *badger.Sequence
 }
 
-const noOwner uint32 = 0
+func (r localBoxRepo) Save(box LocalBoxClone) error {
+	rowID, err := r.nextRowID()
+	if err != nil {
+		return err
+	}
+
+	return saveValue(r.DB, r.tableName(), box.Owner.LocalRef, rowID, box)
+}
+
+func (r localBoxRepo) tableName() string {
+	return "localboxes"
+}
+
+func (r *localBoxRepo) nextRowID() (uint32, error) {
+	if r.seq == nil {
+		seq, err := r.DB.GetSeq([]byte(r.tableName()), 1)
+		if err != nil {
+			return 0, err
+		}
+		r.seq = seq
+	}
+
+	s, err := r.seq.Next()
+	if err != nil {
+		return 0, err
+	}
+
+	return uint32(s), nil
+}
+
+// -------------------------------------------------------------------
+
+type localAccountRepo struct {
+	DB  kvs.DB
+	seq *badger.Sequence
+}
 
 func (r localAccountRepo) Save(acc LocalAccountClone) error {
 	rowID, err := r.nextRowID()
@@ -74,7 +135,7 @@ func (r localAccountRepo) tableName() string {
 
 func (r *localAccountRepo) nextRowID() (uint32, error) {
 	if r.seq == nil {
-		seq, err := r.DB.GetSeq([]byte(r.tableName()), 100)
+		seq, err := r.DB.GetSeq([]byte(r.tableName()), 1)
 		if err != nil {
 			return 0, err
 		}
