@@ -28,7 +28,7 @@ func (r *Accounts) GetByID(rowID uint32) (models.Account, error) {
 	acc := models.Account{
 		ID: uint32(rowID),
 	}
-	blankEntries := kvs.ConvertToBlankEntries(r.tableName(), 0, rowID, acc)
+	blankEntries := kvs.ConvertToBlankEntriesWithUUID(r.tableName(), kvs.RootOwner{}, rowID, acc)
 	for _, e := range blankEntries {
 		if err := kvs.Get(r.DB, &e); err != nil {
 			return acc, err
@@ -45,7 +45,7 @@ func (r *Accounts) GetByID(rowID uint32) (models.Account, error) {
 func (r *Accounts) GetAll() ([]models.Account, error) {
 	accounts := []models.Account{}
 
-	blankEntries := kvs.ConvertToBlankEntries(r.tableName(), 0, 0, models.Account{})
+	blankEntries := kvs.ConvertToBlankEntriesWithUUID(r.tableName(), kvs.RootOwner{}, 0, models.Account{})
 	for _, ent := range blankEntries {
 		// iterate over all stored values for this entry
 		prefix := ent.PrefixKey()

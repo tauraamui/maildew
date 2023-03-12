@@ -3,6 +3,7 @@ package kvs_test
 import (
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/matryer/is"
 	"github.com/tauraamui/maildew/internal/kvs"
 )
@@ -97,12 +98,14 @@ func TestConvertToEntries(t *testing.T) {
 	is = is.NewRelaxed(t)
 
 	is.Equal(kvs.Entry{
+		OwnerUUID:  uuid.UUID{},
 		TableName:  "test",
 		ColumnName: "foo",
 		Data:       []byte{70, 111, 111},
 	}, e[0])
 
 	is.Equal(kvs.Entry{
+		OwnerUUID:  uuid.UUID{},
 		TableName:  "test",
 		ColumnName: "bar",
 		Data:       []byte{52},
