@@ -9,8 +9,6 @@ import (
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/google/uuid"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 type Entry struct {
@@ -81,32 +79,45 @@ type RootOwner struct{}
 
 func (o RootOwner) String() string { return "root" }
 
+func ConvertToBlankEntriesWithUUID(tableName string, ownerID UUID, rowID uint32, x interface{}) []Entry {
+	v := reflect.ValueOf(x)
+	return convertToEntriesWithUUID(tableName, 0, rowID, ownerID, v, false)
+}
+
 func ConvertToEntriesWithUUID(tableName string, ownerID UUID, rowID uint32, x interface{}) []Entry {
 	v := reflect.ValueOf(x)
 	return convertToEntriesWithUUID(tableName, 0, rowID, ownerID, v, true)
 }
 
 func LoadEntry(s interface{}, entry Entry) error {
-	// Convert the interface value to a reflect.Value so we can access its fields
+	// convert the interface value to a reflect.Value so we can access its fields
 	val := reflect.ValueOf(s).Elem()
 
-	// Check if the entry's ColumnName field matches the name of any of the struct's fields
-	field := val.FieldByName(cases.Title(language.English).String(entry.ColumnName))
-	if !field.IsValid() {
-		// check if entry column name matches full upper casing instead
-		field = val.FieldByName(cases.Upper(language.English).String(entry.ColumnName))
-		if !field.IsValid() {
-			// The struct does not have a field with the same name as the entry's ColumnName, so return an error
-			return fmt.Errorf("struct does not have a field with name %q", entry.ColumnName)
-		}
+	field, err := resolveFieldRef(val, entry.ColumnName)
+	if err != nil {
+		return err
 	}
 
-	// Convert the entry's Data field to the type of the target field
+	// convert the entry's Data field to the type of the target field
 	if err := convertFromBytes(entry.Data, field.Addr().Interface()); err != nil {
 		return fmt.Errorf("failed to convert entry data to field type: %v", err)
 	}
 
 	return nil
+}
+
+func resolveFieldRef(v reflect.Value, nameToMatch string) (reflect.Value, error) {
+	t := v.Type()
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+
+		if strings.EqualFold(field.Name, nameToMatch) {
+			return v.Field(i), nil
+		}
+	}
+
+	return reflect.Zero(reflect.TypeOf(v)), fmt.Errorf("struct does not have a field with name %q", nameToMatch)
 }
 
 func LoadEntries(s interface{}, entries []Entry) error {
@@ -191,6 +202,14 @@ func convertFromBytes(data []byte, i interface{}) error {
 	case *string:
 		// Convert the []byte to a string and set the value of the interface to the string.
 		*v = string(data)
+		return nil
+	case *UUID:
+		// Convert the []byte to a UUID instance and set the value of the interface to it.
+		uuidv, err := uuid.ParseBytes(data)
+		if err != nil {
+			return err
+		}
+		*v = uuidv
 		return nil
 	default:
 		// Use json.Unmarshal to convert the []byte to the interface.
