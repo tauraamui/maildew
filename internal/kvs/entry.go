@@ -29,8 +29,10 @@ func (e Entry) Key() []byte {
 }
 
 func (e Entry) resolveOwnerID() string {
-	if ustr := e.OwnerUUID.String(); len(ustr) != 0 {
-		return ustr
+	if e.OwnerUUID != nil {
+		if ustr := e.OwnerUUID.String(); len(ustr) != 0 {
+			return ustr
+		}
 	}
 
 	return strconv.Itoa(int(e.OwnerID))
