@@ -16,6 +16,18 @@ type GenericRepo struct {
 	seq       *badger.Sequence
 }
 
+func saveValueWithUUID(db kvs.DB, tableName string, ownerID kvs.UUID, rowID uint32, v Value) error {
+	entries := kvs.ConvertToEntriesWithUUID(tableName, ownerID, rowID, v)
+	for _, e := range entries {
+		if err := kvs.Store(db, e); err != nil {
+			return err
+		}
+	}
+
+	v.SetID(rowID)
+	return nil
+}
+
 func saveValue(db kvs.DB, tableName string, rowID, ownerID uint32, v Value) error {
 	entries := kvs.ConvertToEntries(tableName, ownerID, rowID, v)
 	for _, e := range entries {

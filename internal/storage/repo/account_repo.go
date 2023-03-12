@@ -21,7 +21,7 @@ func (r *Accounts) Save(user *models.Account) error {
 		return err
 	}
 
-	return saveValue(r.DB, r.tableName(), rowID, 0, user)
+	return saveValueWithUUID(r.DB, r.tableName(), kvs.RootOwner{}, rowID, user)
 }
 
 func (r *Accounts) GetByID(rowID uint32) (models.Account, error) {
