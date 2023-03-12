@@ -15,7 +15,7 @@ type remoteBox struct {
 
 type LocalAccountClone struct {
 	RemoteRef          []byte // the mail servers remote account UUID equivilient
-	LocalRef           uuid.UUID
+	LocalRef           kvs.UUID
 	Username, Password string
 }
 
@@ -26,6 +26,7 @@ type LocalBoxClone struct {
 }
 
 type LocalMessageClone struct {
+	ID        uint32 `mdb:"ignore"`
 	RemoteRef []byte
 	LocalRef  kvs.UUID
 	Subject   string
@@ -109,6 +110,15 @@ func main() {
 	if err := db.DumpToStdout(); err != nil {
 		log.Fatalf("unable to output in memory DB to stdout: %v\n", err)
 	}
+
+	msgs, err := msgRepo.GetMessages(inbox.LocalRef)
+	if err != nil {
+		log.Fatalf("unable to acquire messages owned by mailbox %s from DB: %v\n", inbox.LocalRef, err)
+	}
+
+	for _, msg := range msgs {
+		log.Printf("MSG: %+v\n", msg)
+	}
 }
 
 // -------------------------------------------------------------------
@@ -155,13 +165,55 @@ type localMessageRepo struct {
 	seq *badger.Sequence
 }
 
-func (r localMessageRepo) Save(owner kvs.UUID, msg LocalMessageClone) error {
+func (r localMessageRepo) Save(ownerID kvs.UUID, msg LocalMessageClone) error {
 	rowID, err := r.nextRowID()
 	if err != nil {
 		return err
 	}
 
-	return saveValue(r.DB, r.tableName(), owner, rowID, msg)
+	return saveValue(r.DB, r.tableName(), ownerID, rowID, msg)
+}
+
+func (r localMessageRepo) GetMessages(ownerID kvs.UUID) ([]LocalMessageClone, error) {
+	messages := []LocalMessageClone{}
+
+	blankEntries := kvs.ConvertToBlankEntriesWithUUID(r.tableName(), ownerID, 0, LocalMessageClone{})
+	for _, ent := range blankEntries {
+		// iterate over all stored values for this entry
+		prefix := ent.PrefixKey()
+		if err := r.DB.View(func(txn *badger.Txn) error {
+			it := txn.NewIterator(badger.DefaultIteratorOptions)
+			defer it.Close()
+
+			var rows uint32 = 0
+			for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+				// be very clear with our append conditions
+				if len(messages) == 0 || rows >= uint32(len(messages)) {
+					messages = append(messages, LocalMessageClone{
+						ID: rows,
+					})
+				}
+				item := it.Item()
+				ent.RowID = rows
+				if err := item.Value(func(val []byte) error {
+					ent.Data = val
+					return nil
+				}); err != nil {
+					return err
+				}
+				if err := kvs.LoadEntry(&messages[rows], ent); err != nil {
+					return err
+				}
+				rows++
+			}
+
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	return messages, nil
 }
 
 func (r localMessageRepo) tableName() string {
