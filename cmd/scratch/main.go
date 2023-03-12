@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/dgraph-io/badger/v3"
@@ -107,17 +108,28 @@ func main() {
 		log.Fatalf("unable to store local message in DB: %v\n", err)
 	}
 
-	if err := db.DumpToStdout(); err != nil {
-		log.Fatalf("unable to output in memory DB to stdout: %v\n", err)
-	}
+	/*
+		if err := db.DumpToStdout(); err != nil {
+			log.Fatalf("unable to output in memory DB to stdout: %v\n", err)
+		}
+	*/
 
-	msgs, err := msgRepo.GetMessages(inbox.LocalRef)
+	inboxmsgs, err := msgRepo.GetMessages(inbox.LocalRef)
 	if err != nil {
 		log.Fatalf("unable to acquire messages owned by mailbox %s from DB: %v\n", inbox.LocalRef, err)
 	}
 
-	for _, msg := range msgs {
-		log.Printf("MSG: %+v\n", msg)
+	for _, msg := range inboxmsgs {
+		fmt.Printf("INBOX MSG: %+v\n", msg)
+	}
+
+	junkmsgs, err := msgRepo.GetMessages(junk.LocalRef)
+	if err != nil {
+		log.Fatalf("unable to acquire messages owned by mailbox %s from DB: %v\n", junk.LocalRef, err)
+	}
+
+	for _, msg := range junkmsgs {
+		fmt.Printf("JUNK MSG: %+v\n", msg)
 	}
 }
 
