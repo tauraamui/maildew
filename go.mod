@@ -10,6 +10,7 @@ require (
 	github.com/emersion/go-imap v1.2.1
 	github.com/emersion/go-message v0.15.0
 	github.com/emersion/go-smtp v0.16.0
+	github.com/google/uuid v1.3.0
 	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
 	github.com/matryer/is v1.4.0
 	github.com/pkg/errors v0.9.1
@@ -18,7 +19,6 @@ require (
 	github.com/tacusci/logging/v2 v2.1.1
 	github.com/tauraamui/gonp v0.0.0-20230129073740-ad7ea625393b
 	github.com/tauraamui/xerror v0.0.0-20230122173728-a6ff5ab2f4d7
-	golang.org/x/text v0.5.0
 	gopkg.in/dealancer/validate.v2 v2.1.0
 )
 
@@ -40,7 +40,6 @@ require (
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/flatbuffers v1.12.1 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/klauspost/compress v1.12.3 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
@@ -62,6 +61,7 @@ require (
 	golang.org/x/net v0.3.0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/term v0.3.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

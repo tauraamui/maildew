@@ -7,6 +7,7 @@ import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/google/uuid"
 	"github.com/tauraamui/maildew/internal/kvs"
+	"github.com/tauraamui/maildew/pkg/mail"
 )
 
 type remoteAccount int
@@ -41,6 +42,11 @@ func main() {
 		log.Fatalf("unable to load in memory DB: %v\n", err)
 	}
 	defer db.Close()
+
+	mail.RegisterAccount(mail.NewAccountRepo(db), mail.NewMailboxRepo(db), mail.NewMessageRepo(db), mail.Account{
+		Username: "test@place.com",
+		Password: "fakepassword",
+	})
 
 	accRepo := localAccountRepo{DB: db}
 	boxRepo := localBoxRepo{DB: db}
