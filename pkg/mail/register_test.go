@@ -8,9 +8,14 @@ import (
 	"github.com/tauraamui/maildew/internal/kvs"
 )
 
-type mockRemoteConnection struct{}
+type mockRemoteConnection struct {
+	mailboxes []string
+}
 
 func (mc mockRemoteConnection) List(ref, name string, ch chan *imap.MailboxInfo) error {
+	for _, name := range mc.mailboxes {
+		ch <- &imap.MailboxInfo{Name: name}
+	}
 	close(ch)
 	return nil
 }
@@ -32,9 +37,17 @@ func (mar mockAccountRepo) Save(user Account) error {
 
 func (mar mockAccountRepo) Close() {}
 
-type mockMailboxRepo struct{}
+type mockMailboxRepo struct {
+	saved []savedMailbox
+}
 
-func (mmr mockMailboxRepo) Save(owner kvs.UUID, mailbox Mailbox) error {
+type savedMailbox struct {
+	owner kvs.UUID
+	mb    Mailbox
+}
+
+func (mmr *mockMailboxRepo) Save(owner kvs.UUID, mailbox Mailbox) error {
+	mmr.saved = append(mmr.saved, savedMailbox{owner, mailbox})
 	return nil
 }
 
@@ -57,7 +70,9 @@ func overloadAcquireClientConn(overload func(string, Account) (RemoteConnection,
 }
 
 func TestRegisterAccountSuccessSyncedRemoteMailboxes(t *testing.T) {
-	mconn := mockRemoteConnection{}
+	mconn := mockRemoteConnection{
+		mailboxes: []string{"INBOX", "SPAM"},
+	}
 	reset := overloadAcquireClientConn(func(s string, a Account) (RemoteConnection, error) {
 		return mconn, nil
 	})
@@ -69,5 +84,9 @@ func TestRegisterAccountSuccessSyncedRemoteMailboxes(t *testing.T) {
 
 	is := is.New(t)
 
-	is.NoErr(RegisterAccount(accRepo, mbRepo, msgRepo, Account{Username: "test@place.com", Password: "efewfweoifjio"}))
+	is.NoErr(RegisterAccount(accRepo, &mbRepo, msgRepo, Account{Username: "test@place.com", Password: "efewfweoifjio"}))
+
+	is.Equal(len(mbRepo.saved), 2)
+	is.Equal(mbRepo.saved[0].mb.Name, "INBOX")
+	is.Equal(mbRepo.saved[1].mb.Name, "SPAM")
 }
