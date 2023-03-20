@@ -102,7 +102,7 @@ func persistAccount(ar AccountRepo, acc Account) error {
 
 func persistMailboxes(lister listFunc, mbRepo MailboxRepo, acc Account) error {
 	done := make(chan error, 1)
-	defer func() { close(done) }()
+	defer close(done)
 	mailboxes := make(chan *imap.MailboxInfo, 10)
 
 	go func() {
@@ -112,7 +112,6 @@ func persistMailboxes(lister listFunc, mbRepo MailboxRepo, acc Account) error {
 	for mb := range mailboxes {
 		mbuuid, err := persistMailbox(mbRepo, acc.UUID, Mailbox{Name: mb.Name})
 		if err != nil {
-			defer func() { close(mailboxes) }()
 			return err
 		}
 		fmt.Printf("mbuuid: %v\n", mbuuid)
