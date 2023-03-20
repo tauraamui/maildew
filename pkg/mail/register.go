@@ -14,6 +14,8 @@ type RemoteConnection interface {
 	RemoteMessagesFetcher
 }
 
+type listFunc func(ref, name string, ch chan *imap.MailboxInfo) error
+
 type RemoteMailboxLister interface {
 	List(ref, name string, ch chan *imap.MailboxInfo) error
 }
@@ -86,9 +88,23 @@ func RegisterAccount(
 
 func syncAccountMailboxes(conn RemoteConnection, mbRepo MailboxRepo, acc Account) error {
 	mailboxes := make(chan *imap.MailboxInfo, 10)
+
+	if err := persistMailboxes(conn.List, mailboxes, mbRepo, acc); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func persistAccount(ar AccountRepo, acc Account) error {
+	acc.UUID = uuid.New()
+	return ar.Save(acc)
+}
+
+func persistMailboxes(lister listFunc, mailboxes chan *imap.MailboxInfo, mbRepo MailboxRepo, acc Account) error {
 	done := make(chan error, 1)
 	go func() {
-		done <- conn.List("", "*", mailboxes)
+		done <- lister("", "*", mailboxes)
 	}()
 
 	for mb := range mailboxes {
@@ -100,11 +116,6 @@ func syncAccountMailboxes(conn RemoteConnection, mbRepo MailboxRepo, acc Account
 	}
 
 	return nil
-}
-
-func persistAccount(ar AccountRepo, acc Account) error {
-	acc.UUID = uuid.New()
-	return ar.Save(acc)
 }
 
 func persistMailbox(mr MailboxRepo, owner kvs.UUID, mb Mailbox) (kvs.UUID, error) {
