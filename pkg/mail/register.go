@@ -1,6 +1,7 @@
 package mail
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/emersion/go-imap"
@@ -87,9 +88,7 @@ func RegisterAccount(
 }
 
 func syncAccountMailboxes(conn RemoteConnection, mbRepo MailboxRepo, acc Account) error {
-	mailboxes := make(chan *imap.MailboxInfo, 10)
-
-	if err := persistMailboxes(conn.List, mailboxes, mbRepo, acc); err != nil {
+	if err := persistMailboxes(conn.List, mbRepo, acc); err != nil {
 		return err
 	}
 
@@ -101,14 +100,22 @@ func persistAccount(ar AccountRepo, acc Account) error {
 	return ar.Save(acc)
 }
 
-func persistMailboxes(lister listFunc, mailboxes chan *imap.MailboxInfo, mbRepo MailboxRepo, acc Account) error {
+func persistMailboxes(lister listFunc, mbRepo MailboxRepo, acc Account) error {
 	done := make(chan error, 1)
+	defer func() { close(done) }()
+	mailboxes := make(chan *imap.MailboxInfo, 10)
+
 	go func() {
 		done <- lister("", "*", mailboxes)
 	}()
 
 	for mb := range mailboxes {
-		persistMailbox(mbRepo, acc.UUID, Mailbox{Name: mb.Name})
+		mbuuid, err := persistMailbox(mbRepo, acc.UUID, Mailbox{Name: mb.Name})
+		if err != nil {
+			defer func() { close(mailboxes) }()
+			return err
+		}
+		fmt.Printf("mbuuid: %v\n", mbuuid)
 	}
 
 	if err := <-done; err != nil {
