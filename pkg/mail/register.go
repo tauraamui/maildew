@@ -1,7 +1,6 @@
 package mail
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/emersion/go-imap"
@@ -14,8 +13,6 @@ type RemoteConnection interface {
 	RemoteMailboxLister
 	RemoteMessagesFetcher
 }
-
-type listFunc func(ref, name string, ch chan *imap.MailboxInfo) error
 
 type RemoteMailboxLister interface {
 	List(ref, name string, ch chan *imap.MailboxInfo) error
@@ -80,15 +77,15 @@ func RegisterAccount(
 		return err
 	}
 
-	if err := syncAccountMailboxes(cc, mbRepo, acc); err != nil {
+	if err := syncAccountMailboxes(cc, mbRepo, msgRepo, acc); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func syncAccountMailboxes(conn RemoteConnection, mbRepo MailboxRepo, acc Account) error {
-	if err := persistMailboxes(conn.List, mbRepo, acc); err != nil {
+func syncAccountMailboxes(conn RemoteConnection, mbRepo MailboxRepo, msgRepo MessageRepo, acc Account) error {
+	if err := persistMailboxes(conn, mbRepo, msgRepo, acc); err != nil {
 		return err
 	}
 
@@ -100,21 +97,20 @@ func persistAccount(ar AccountRepo, acc Account) error {
 	return ar.Save(acc)
 }
 
-func persistMailboxes(lister listFunc, mbRepo MailboxRepo, acc Account) error {
-	done := make(chan error, 1)
+func persistMailboxes(conn RemoteConnection, mbRepo MailboxRepo, msgRepo MessageRepo, acc Account) error {
+	done := make(chan error)
 	defer close(done)
 	mailboxes := make(chan *imap.MailboxInfo, 10)
 
 	go func() {
-		done <- lister("", "*", mailboxes)
+		done <- conn.List("", "*", mailboxes)
 	}()
 
 	for mb := range mailboxes {
-		mbuuid, err := persistMailbox(mbRepo, acc.UUID, Mailbox{Name: mb.Name})
+		err := persistMailbox(conn, mbRepo, msgRepo, acc.UUID, Mailbox{Name: mb.Name})
 		if err != nil {
 			return err
 		}
-		fmt.Printf("mbuuid: %v\n", mbuuid)
 	}
 
 	if err := <-done; err != nil {
@@ -124,18 +120,37 @@ func persistMailboxes(lister listFunc, mbRepo MailboxRepo, acc Account) error {
 	return nil
 }
 
-func persistMailbox(mr MailboxRepo, owner kvs.UUID, mb Mailbox) (kvs.UUID, error) {
+func persistMailbox(conn RemoteConnection, mbRepo MailboxRepo, msgRepo MessageRepo, owner kvs.UUID, mb Mailbox) error {
 	mb.UUID = uuid.New()
-	return mb.UUID, mr.Save(owner, mb)
+	if err := mbRepo.Save(owner, mb); err != nil {
+		return err
+	}
+
+	done := make(chan error)
+	defer close(done)
+	messages := make(chan *imap.Message)
+
+	go fetchMailboxMessages(conn, mb.Name, messages, done)
+
+	for msg := range messages {
+		_, err := storeMessage(msgRepo, mb.UUID, Message{
+			RemoteUID: msg.Uid,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := <-done; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func storeMessage(msgr MessageRepo, owner kvs.UUID, msg Message) (kvs.UUID, error) {
 	msg.UUID = uuid.New()
 	return msg.UUID, msgr.Save(owner, msg)
-}
-
-func listMailboxes(lister RemoteMailboxLister, dest chan *imap.MailboxInfo, errch chan<- error) {
-	errch <- lister.List("", "*", dest)
 }
 
 func fetchMailboxMessages(fetcher RemoteMessagesFetcher, mbName string, dest chan *imap.Message, errch chan<- error) {
