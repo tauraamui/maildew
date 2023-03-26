@@ -1,12 +1,14 @@
 package mail
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/emersion/go-imap"
 	imapclient "github.com/emersion/go-imap/client"
 	"github.com/google/uuid"
 	"github.com/tauraamui/maildew/internal/kvs"
+	"github.com/tauraamui/maildew/pkg/logging"
 )
 
 type RemoteConnection interface {
@@ -41,7 +43,7 @@ type Message struct {
 func resolveAddressFromUsername(username string) string {
 	parts := strings.Split(username, "@")
 	if len(parts) > 1 {
-		return parts[1]
+		return fmt.Sprintf("imap.%s", parts[1])
 	}
 	return ""
 }
@@ -61,6 +63,7 @@ var acquireClientConn = func(addr string, acc Account) (RemoteConnection, error)
 }
 
 func RegisterAccount(
+	log logging.I,
 	accRepo AccountRepo,
 	mbRepo MailboxRepo,
 	msgRepo MessageRepo,

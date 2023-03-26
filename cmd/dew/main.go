@@ -1,15 +1,17 @@
 package main
 
 import (
-	"errors"
-
-	"github.com/tauraamui/maildew/internal/config"
-	"github.com/tauraamui/maildew/internal/configdef"
-	"github.com/tauraamui/maildew/internal/kvs"
-	"github.com/tauraamui/maildew/internal/storage/repo"
-	"github.com/tauraamui/maildew/internal/tui"
+	"github.com/tauraamui/maildew/pkg/logging"
 )
 
+func main() {
+	log := logging.New(logging.Options{Level: logging.DEBUG})
+	log.Debug().Msg("test debug message")
+	log.Info().Msg("MAILDEW REGISTRATION")
+	//conn := mail.RegisterAccount()
+}
+
+/*
 func main() {
 	if err := config.DefaultCreator().Create(); err != nil {
 		if err != nil {
@@ -39,3 +41,4 @@ func main() {
 
 	db.DumpToStdout()
 }
+*/
