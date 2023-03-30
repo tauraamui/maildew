@@ -49,7 +49,7 @@ func resolveAddressFromUsername(username string) string {
 }
 
 var acquireClientConn = func(addr string, acc Account) (RemoteConnection, error) {
-	cc, err := imapclient.Dial(addr)
+	cc, err := imapclient.DialTLS(addr, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial to address %s: %w", addr, err)
 	}
