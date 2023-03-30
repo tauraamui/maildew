@@ -43,20 +43,19 @@ type Message struct {
 func resolveAddressFromUsername(username string) string {
 	parts := strings.Split(username, "@")
 	if len(parts) > 1 {
-		return fmt.Sprintf("imap.%s", parts[1])
+		return fmt.Sprintf("imap.%s:%d", parts[1], 993)
 	}
 	return ""
 }
 
 var acquireClientConn = func(addr string, acc Account) (RemoteConnection, error) {
-
 	cc, err := imapclient.Dial(addr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to dial to address %s: %w", addr, err)
 	}
 
 	if err := cc.Login(acc.Username, acc.Password); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to login to account: %w", err)
 	}
 
 	return cc, nil
@@ -71,10 +70,13 @@ func RegisterAccount(
 ) error {
 	addr := resolveAddressFromUsername(acc.Username)
 
+	log.Debug().Msgf("resolved addr to %s", addr)
+
 	if err := persistAccount(accRepo, acc); err != nil {
 		return err
 	}
 
+	log.Debug().Msg("attempting to login to account")
 	cc, err := acquireClientConn(addr, acc)
 	if err != nil {
 		return err
