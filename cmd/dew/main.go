@@ -23,15 +23,14 @@ func main() {
 	if err != nil {
 		log.Fatal().Msgf("unable to start localhost TCP listener: %v", err)
 	}
-	defer l.Close()
 
-	backend := mock.Backend{}
-	backend.RegisterUser(os.Getenv("MD_USERNAME"), os.Getenv("MD_PASSWORD"))
-	err, shutdown := startLocalServerWithBackend(l, &backend)
+	username, password := os.Getenv("MD_USERNAME"), os.Getenv("MD_PASSWORD")
+	backend := mock.New()
+	//backend.RegisterUser(username, password)
+	err, shutdown := startLocalServerWithBackend(l, backend)
 	if err != nil {
 		log.Fatal().Msgf("unable to start local IMAP server: %v", err)
 	}
-	defer shutdown()
 
 	db, err := kvs.NewMemDB()
 	if err != nil {
@@ -43,13 +42,18 @@ func main() {
 	msgRepo := mail.NewMessageRepo(db)
 
 	acc := mail.Account{
-		Username: os.Getenv("MD_USERNAME"),
-		Password: os.Getenv("MD_PASSWORD"),
+		Username: username,
+		Password: password,
 	}
 
 	if err := mail.RegisterAccount(log, l.Addr().String(), accRepo, mbRepo, msgRepo, acc); err != nil {
 		log.Fatal().Msgf("failed to register new account: %v", err)
 	}
+
+	db.DumpToStdout()
+
+	l.Close()
+	shutdown()
 }
 
 func setupListener() (net.Listener, error) {

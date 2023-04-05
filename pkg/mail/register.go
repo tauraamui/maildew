@@ -14,6 +14,7 @@ import (
 type RemoteConnection interface {
 	RemoteMailboxLister
 	RemoteMessagesFetcher
+	Close() error
 }
 
 type RemoteMailboxLister interface {
@@ -85,7 +86,7 @@ func RegisterAccount(
 
 	log.Debug().Msgf("resolved addr to %s", addr)
 
-	if err := persistAccount(accRepo, acc); err != nil {
+	if err := persistAccount(accRepo, &acc); err != nil {
 		return err
 	}
 
@@ -94,10 +95,14 @@ func RegisterAccount(
 	if err != nil {
 		return err
 	}
+	defer cc.Close()
+	log.Debug().Msg("logged into account")
 
+	log.Debug().Msg("syncing mailboxes")
 	if err := syncAccountMailboxes(cc, mbRepo, msgRepo, acc); err != nil {
 		return err
 	}
+	log.Debug().Msg("synced mailboxes")
 
 	return nil
 }
@@ -110,9 +115,9 @@ func syncAccountMailboxes(conn RemoteConnection, mbRepo MailboxRepo, msgRepo Mes
 	return nil
 }
 
-func persistAccount(ar AccountRepo, acc Account) error {
+func persistAccount(ar AccountRepo, acc *Account) error {
 	acc.UUID = uuid.New()
-	return ar.Save(acc)
+	return ar.Save(*acc)
 }
 
 func persistMailboxes(conn RemoteConnection, mbRepo MailboxRepo, msgRepo MessageRepo, acc Account) error {

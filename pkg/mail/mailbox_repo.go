@@ -44,7 +44,7 @@ func saveValueWithUUID(db kvs.DB, tableName string, ownerID kvs.UUID, rowID uint
 }
 
 func (r mailboxRepo) tableName() string {
-	return accountsTableName
+	return mailboxesTableName
 }
 
 func (r mailboxRepo) nextRowID() (uint32, error) {
