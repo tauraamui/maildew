@@ -48,8 +48,15 @@ func resolveAddressFromUsername(username string) string {
 	return ""
 }
 
-var acquireClientConn = func(addr string, acc Account) (RemoteConnection, error) {
-	cc, err := imapclient.DialTLS(addr, nil)
+var acquireClientConn = func(addr string, acc Account, useSSL bool) (RemoteConnection, error) {
+	var cc *imapclient.Client
+	var err error
+
+	if useSSL {
+		cc, err = imapclient.DialTLS(addr, nil)
+	} else {
+		cc, err = imapclient.Dial(addr)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial to address %s: %w", addr, err)
 	}
@@ -63,12 +70,18 @@ var acquireClientConn = func(addr string, acc Account) (RemoteConnection, error)
 
 func RegisterAccount(
 	log logging.I,
+	addr string,
 	accRepo AccountRepo,
 	mbRepo MailboxRepo,
 	msgRepo MessageRepo,
 	acc Account,
 ) error {
-	addr := resolveAddressFromUsername(acc.Username)
+
+	useSSL := false
+	if len(addr) == 0 {
+		addr = resolveAddressFromUsername(acc.Username)
+		useSSL = true
+	}
 
 	log.Debug().Msgf("resolved addr to %s", addr)
 
@@ -77,7 +90,7 @@ func RegisterAccount(
 	}
 
 	log.Debug().Msg("attempting to login to account")
-	cc, err := acquireClientConn(addr, acc)
+	cc, err := acquireClientConn(addr, acc, useSSL)
 	if err != nil {
 		return err
 	}
