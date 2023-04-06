@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net"
-	"os"
 
 	"github.com/emersion/go-imap/backend"
 	"github.com/emersion/go-imap/server"
@@ -25,9 +24,7 @@ func main() {
 		log.Fatal().Msgf("unable to start localhost TCP listener: %v", err)
 	}
 
-	username, password := os.Getenv("MD_USERNAME"), os.Getenv("MD_PASSWORD")
 	backend := mock.New()
-	//backend.RegisterUser(username, password)
 	err, shutdown := startLocalServerWithBackend(l, backend)
 	if err != nil {
 		log.Fatal().Msgf("unable to start local IMAP server: %v", err)
@@ -42,23 +39,32 @@ func main() {
 	mbRepo := mail.NewMailboxRepo(db)
 	msgRepo := mail.NewMessageRepo(db)
 
-	acc := mail.Account{
-		Username: username,
-		Password: password,
-	}
+	/*
+		acc := mail.Account{
+			Username: username,
+			Password: password,
+		}
 
-	if err := mail.RegisterAccount(log, l.Addr().String(), accRepo, mbRepo, msgRepo, acc); err != nil {
-		log.Fatal().Msgf("failed to register new account: %v", err)
+		if err := mail.RegisterAccount(log, l.Addr().String(), accRepo, mbRepo, msgRepo, acc); err != nil {
+			log.Fatal().Msgf("failed to register new account: %v", err)
+		}
+	*/
+
+	if err := tui.Run(
+		log,
+		l.Addr().String(),
+		tui.Repositories{
+			AccountRepo: accRepo,
+			MailboxRepo: mbRepo,
+			MessageRepo: msgRepo,
+		}); err != nil {
+		log.Fatal().Msgf("failed to load TUI: %v", err)
 	}
 
 	db.DumpToStdout()
 
 	l.Close()
 	shutdown()
-
-	if err := tui.Run(); err != nil {
-		log.Fatal().Msgf("failed to load TUI: %v", err)
-	}
 }
 
 func setupListener() (net.Listener, error) {

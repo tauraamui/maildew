@@ -7,6 +7,8 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/tauraamui/maildew/pkg/logging"
+	"github.com/tauraamui/maildew/pkg/mail"
 )
 
 var (
@@ -18,20 +20,32 @@ var (
 )
 
 type model struct {
+	log        logging.I
+	imapAddr   string
+	repos      Repositories
 	inputs     []textinput.Model
 	focusIndex int
 }
 
-func Run() error {
-	if _, err := tea.NewProgram(initialModel()).Run(); err != nil {
+type Repositories struct {
+	AccountRepo mail.AccountRepo
+	MailboxRepo mail.MailboxRepo
+	MessageRepo mail.MessageRepo
+}
+
+func Run(l logging.I, addr string, r Repositories) error {
+	if _, err := tea.NewProgram(initialModel(l, addr, r)).Run(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func initialModel() model {
+func initialModel(log logging.I, addr string, r Repositories) model {
 	m := model{
-		inputs: make([]textinput.Model, 2),
+		log:      log,
+		imapAddr: addr,
+		repos:    r,
+		inputs:   make([]textinput.Model, 2),
 	}
 
 	var t textinput.Model
@@ -58,14 +72,31 @@ func (m model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
+func registerUserCmd(u, p string) func() tea.Msg {
+	return func() tea.Msg {
+		return registerUserMsg{u, p}
+	}
+}
+
+type registerUserMsg struct {
+	Username, Password string
+}
+
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case registerUserMsg:
+		acc := mail.Account{Username: msg.Username, Password: msg.Password}
+		mail.RegisterAccount(m.log, m.imapAddr, m.repos.AccountRepo, m.repos.MailboxRepo, m.repos.MessageRepo, acc)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "esc":
 			return m, tea.Quit
 		case "tab", "shift+tab", "enter", "up", "down":
 			s := msg.String()
+
+			if s == "enter" && m.focusIndex == len(m.inputs) {
+				return m, registerUserCmd(m.inputs[0].Value(), m.inputs[1].Value())
+			}
 
 			if s == "up" || s == "shift+tab" {
 				m.focusIndex--
