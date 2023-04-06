@@ -12,6 +12,7 @@ import (
 	"github.com/tauraamui/maildew/internal/storage/models"
 	"github.com/tauraamui/maildew/pkg/logging"
 	"github.com/tauraamui/maildew/pkg/mail"
+	"github.com/tauraamui/maildew/pkg/tui"
 )
 
 func main() {
@@ -54,6 +55,10 @@ func main() {
 
 	l.Close()
 	shutdown()
+
+	if err := tui.Run(); err != nil {
+		log.Fatal().Msgf("failed to load TUI: %v", err)
+	}
 }
 
 func setupListener() (net.Listener, error) {
