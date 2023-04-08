@@ -18,3 +18,4 @@ mail.db
 builds/dew
 .mailkey
 *.sess
+maildew.log

@@ -12,11 +12,14 @@ import (
 )
 
 var (
-	focusedStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-	blurredStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-	noStyle       = lipgloss.NewStyle()
-	focusedButton = focusedStyle.Copy().Render("[ Submit ]")
-	blurredButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
+	focusedStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	blurredStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	noStyle        = lipgloss.NewStyle()
+	focusedButton  = focusedStyle.Copy().Render("[ Submit ]")
+	blurredButton  = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
+	dialogBoxStyle = lipgloss.NewStyle().Border(lipgloss.RoundedBorder(), true, true, true, true).
+			BorderForeground(lipgloss.Color("#874BFD")).
+			Padding(1, 0)
 )
 
 type model struct {
@@ -25,6 +28,7 @@ type model struct {
 	repos      Repositories
 	inputs     []textinput.Model
 	focusIndex int
+	windowSize tea.WindowSizeMsg
 }
 
 type Repositories struct {
@@ -34,13 +38,13 @@ type Repositories struct {
 }
 
 func Run(l logging.I, addr string, r Repositories) error {
-	if _, err := tea.NewProgram(initialModel(l, addr, r)).Run(); err != nil {
+	if _, err := tea.NewProgram(initialModel(l, addr, r), tea.WithAltScreen()).Run(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func initialModel(log logging.I, addr string, r Repositories) model {
+func initialModel(log logging.I, addr string, r Repositories) *model {
 	m := model{
 		log:      log,
 		imapAddr: addr,
@@ -65,7 +69,7 @@ func initialModel(log logging.I, addr string, r Repositories) model {
 		m.inputs[i] = t
 	}
 
-	return m
+	return &m
 }
 
 func (m model) Init() tea.Cmd {
@@ -82,11 +86,14 @@ type registerUserMsg struct {
 	Username, Password string
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case registerUserMsg:
 		acc := mail.Account{Username: msg.Username, Password: msg.Password}
 		mail.RegisterAccount(m.log, m.imapAddr, m.repos.AccountRepo, m.repos.MailboxRepo, m.repos.MessageRepo, acc)
+	case tea.WindowSizeMsg:
+		m.windowSize = msg
+		m.log.Debug().Msgf("model update received WINDOW_SIZE msg: %v", m.windowSize)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "esc":
@@ -142,7 +149,7 @@ func (m *model) updateInputs(msg tea.Msg) tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m *model) View() string {
 	var b strings.Builder
 
 	for i := range m.inputs {
@@ -158,5 +165,10 @@ func (m model) View() string {
 	}
 	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
 
-	return b.String()
+	ui := lipgloss.JoinVertical(lipgloss.Center, b.String())
+	dialog := lipgloss.Place(m.windowSize.Width, m.windowSize.Height,
+		lipgloss.Center, lipgloss.Center, dialogBoxStyle.Render(ui),
+	)
+
+	return dialog
 }

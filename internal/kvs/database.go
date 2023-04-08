@@ -2,6 +2,8 @@ package kvs
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/dgraph-io/badger/v3"
 )
@@ -39,7 +41,7 @@ func (db DB) Update(f func(txn *badger.Txn) error) error {
 	return db.conn.Update(f)
 }
 
-func (db DB) DumpToStdout() error {
+func (db DB) DumpTo(w io.Writer) error {
 	return db.conn.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchSize = 10
@@ -49,7 +51,7 @@ func (db DB) DumpToStdout() error {
 			item := it.Item()
 			k := item.Key()
 			err := item.Value(func(v []byte) error {
-				fmt.Printf("key=%s, value=%s\n", k, v)
+				fmt.Fprintf(w, "key=%s, value=%s\n", k, v)
 				return nil
 			})
 			if err != nil {
@@ -58,6 +60,10 @@ func (db DB) DumpToStdout() error {
 		}
 		return nil
 	})
+}
+
+func (db DB) DumpToStdout() error {
+	return db.DumpTo(os.Stdout)
 }
 
 func (db DB) Close() error {

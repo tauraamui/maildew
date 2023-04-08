@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"os"
 
 	"github.com/emersion/go-imap/backend"
 	"github.com/emersion/go-imap/server"
@@ -15,7 +16,13 @@ import (
 )
 
 func main() {
-	log := logging.New(logging.Options{Level: logging.DEBUG})
+	f, err := os.OpenFile("maildew.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	log := logging.New(logging.Options{Level: logging.DEBUG, Writer: f})
 	log.Debug().Msg("test debug message")
 	log.Info().Msg("MAILDEW REGISTRATION")
 
@@ -61,7 +68,7 @@ func main() {
 		log.Fatal().Msgf("failed to load TUI: %v", err)
 	}
 
-	db.DumpToStdout()
+	db.DumpTo(f)
 
 	l.Close()
 	shutdown()
