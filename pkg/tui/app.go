@@ -18,7 +18,7 @@ var (
 	focusedButton      = focusedStyle.Copy().Render("[ Submit ]")
 	blurredButton      = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
 	dialogContentStyle = lipgloss.NewStyle().Border(lipgloss.HiddenBorder()).
-				PaddingRight(20)
+				MarginRight(32)
 	dialogBoxStyle = lipgloss.NewStyle().Border(lipgloss.RoundedBorder(), true, true, true, true).
 			BorderForeground(lipgloss.Color("#874BFD")).
 			Padding(0, 1, 0)
@@ -150,6 +150,20 @@ func (m model) updateInputs(msg tea.Msg) tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
+func (m model) resolveLongestInputValueWidth() int {
+	i0w := lipgloss.Width(m.inputs[0].Value())
+	i1w := lipgloss.Width(m.inputs[1].Value())
+	if i0w == i1w {
+		return i0w
+	}
+
+	if i1w > i0w {
+		return i1w
+	}
+
+	return i0w
+}
+
 func (m model) View() string {
 	var b strings.Builder
 
@@ -166,8 +180,13 @@ func (m model) View() string {
 	}
 	fmt.Fprintf(&b, "\n\n%s", *button)
 
+	textWidth := m.resolveLongestInputValueWidth()
+	if textWidth >= 8 {
+		dialogContentStyle.MarginRight(32 - (textWidth - 7))
+	}
+	content := dialogContentStyle.Render(b.String())
 	dialog := lipgloss.Place(m.windowSize.Width, m.windowSize.Height,
-		lipgloss.Center, lipgloss.Center, dialogBoxStyle.Render(dialogContentStyle.Render(b.String())),
+		lipgloss.Center, lipgloss.Center, dialogBoxStyle.Render(content),
 	)
 
 	return dialog
