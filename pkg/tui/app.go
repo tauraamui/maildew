@@ -61,9 +61,11 @@ func initialModel(log logging.I, addr string, r Repositories) model {
 		switch i {
 		case 0:
 			t.Placeholder = "Username"
+			t.CharLimit = 48
 			t.Focus()
 		case 1:
 			t.Placeholder = "Password"
+			t.CharLimit = 48
 			t.EchoMode = textinput.EchoPassword
 			t.EchoCharacter = '•'
 		}
