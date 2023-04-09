@@ -159,8 +159,8 @@ func (m registerAccountModel) View() string {
 	fmt.Fprintf(&b, "\n\n%s", *button)
 
 	textWidth := m.resolveLongestInputValueWidth()
-	if textWidth >= 8 {
-		dialogContentStyle.MarginRight(32 - (textWidth - 7))
+	if textWidth >= 18 {
+		dialogContentStyle.MarginRight(32 - (textWidth - 17))
 	}
 	content := dialogContentStyle.Render(b.String())
 	dialog := lipgloss.Place(m.windowSize.Width, m.windowSize.Height,
