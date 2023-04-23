@@ -16,6 +16,7 @@ type registerAccountModel struct {
 	inputs     []textinput.Model
 	focusIndex int
 	windowSize tea.WindowSizeMsg
+	errDialog  dialogModel
 }
 
 func initialRegisterAccountModel(log logging.I) registerAccountModel {
@@ -53,15 +54,21 @@ func (m registerAccountModel) Init() tea.Cmd {
 func (m registerAccountModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case registerUserMsg:
-		return errMsgModel{log: m.log, parent: m, err: errors.New("An error has occurred."), windowSize: m.windowSize}, nil
-	/*
-		case registerUserMsg:
-			acc := mail.Account{Username: msg.Username, Password: msg.Password}
-			mail.RegisterAccount(m.log, m.imapAddr, m.repos.AccountRepo, m.repos.MailboxRepo, m.repos.MessageRepo, acc)
-	*/
+		m.errDialog = &errMsgModel{parent: m, err: errors.New("Test error...")}
+		return m, nil
+		/*
+			case registerUserMsg:
+				acc := mail.Account{Username: msg.Username, Password: msg.Password}
+				mail.RegisterAccount(m.log, m.imapAddr, m.repos.AccountRepo, m.repos.MailboxRepo, m.repos.MessageRepo, acc)
+		*/
+	case closeDialogMsg:
+		m.errDialog = nil
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
 	case tea.KeyMsg:
+		if m.errDialog != nil {
+			return m.errDialog.Update(msg)
+		}
 		m.log.Debug().Msg("key update from registration model")
 		switch msg.String() {
 		case "ctrl+c", "esc":
@@ -154,5 +161,11 @@ func (m registerAccountModel) View() string {
 		dialogContentStyle.MarginRight(32 - (textWidth - 17))
 	}
 
-	return wrapInDialog(dialogContentStyle.Render(b.String()), m.windowSize, dialogBoxStyle)
+	bg := wrapInDialog(dialogContentStyle.Render(b.String()), m.windowSize, dialogBoxStyle)
+	if m.errDialog != nil {
+		fg := m.errDialog.View()
+		return PlaceOverlay((m.windowSize.Width/2)-(lipgloss.Width(fg)/2), (m.windowSize.Height/2)-(lipgloss.Height(fg)/2), fg, bg, false)
+	}
+
+	return bg
 }

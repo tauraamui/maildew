@@ -11,3 +11,9 @@ func registerUserCmd(u, p string) func() tea.Msg {
 type registerUserMsg struct {
 	Username, Password string
 }
+
+func closeDialogCmd() func() tea.Msg {
+	return func() tea.Msg { return closeDialogMsg{} }
+}
+
+type closeDialogMsg struct{}
