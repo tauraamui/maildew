@@ -67,7 +67,7 @@ func (m registerAccountModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.windowSize = msg
 	case tea.KeyMsg:
 		if m.errDialog != nil {
-			return m.errDialog.Update(msg)
+			return m, m.errDialog.Update(msg)
 		}
 		m.log.Debug().Msg("key update from registration model")
 		switch msg.String() {

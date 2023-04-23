@@ -7,7 +7,7 @@ import (
 )
 
 type dialogModel interface {
-	Update(msg tea.Msg) (tea.Model, tea.Cmd)
+	Update(msg tea.Msg) tea.Cmd
 	View() string
 }
 
@@ -16,15 +16,15 @@ type errMsgModel struct {
 	err    error
 }
 
-func (m *errMsgModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *errMsgModel) Update(msg tea.Msg) tea.Cmd {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
-			return m.parent, nil
+			return closeDialogCmd()
 		}
 	}
-	return m.parent, nil
+	return nil
 }
 
 func (m *errMsgModel) View() string {
@@ -34,5 +34,4 @@ func (m *errMsgModel) View() string {
 	b.WriteString(focusedOKButton)
 
 	return dialogBoxStyle.Render(b.String())
-	// return wrapInDialog(b.String(), m.windowSize, dialogBoxStyle)
 }
