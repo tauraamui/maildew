@@ -29,6 +29,7 @@ func (m *errMsgModel) Update(msg tea.Msg) tea.Cmd {
 
 func (m *errMsgModel) View() string {
 	var b strings.Builder
+	b.WriteString("Error\n\n")
 	errStr := m.err.Error()
 	if len(errStr) == 0 {
 		errStr = "Something went wrong"
@@ -37,7 +38,7 @@ func (m *errMsgModel) View() string {
 		b.WriteString(errStr[1:])
 	}
 
-	b.WriteRune('\n')
+	b.WriteString("\n\n")
 	b.WriteString(focusedOKButton)
 
 	return dialogBoxStyle.Render(b.String())
