@@ -163,7 +163,11 @@ func (m registerAccountModel) View() string {
 		dialogContentStyle.MarginRight(32 - (textWidth - 17))
 	}
 
-	bg := wrapInDialog(dialogContentStyle.Render(b.String()), m.windowSize, dialogBoxStyle)
+	var style = dialogBoxStyle
+	if m.errDialog == nil {
+		style = style.Copy().BorderForeground(lipgloss.Color("#874BFD"))
+	}
+	bg := wrapInDialog(dialogContentStyle.Render(b.String()), m.windowSize, style)
 	if m.errDialog != nil {
 		fg := m.errDialog.View()
 		return PlaceOverlay((m.windowSize.Width/2)-(lipgloss.Width(fg)/2), (m.windowSize.Height/2)-(lipgloss.Height(fg)/2), fg, bg, false)

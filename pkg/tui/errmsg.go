@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type dialogModel interface {
@@ -41,5 +42,5 @@ func (m *errMsgModel) View() string {
 	b.WriteString("\n\n")
 	b.WriteString(focusedOKButton)
 
-	return dialogBoxStyle.Render(b.String())
+	return dialogBoxStyle.Copy().BorderForeground(lipgloss.Color("#874BFD")).Render(b.String())
 }

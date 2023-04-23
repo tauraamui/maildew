@@ -17,12 +17,11 @@ var (
 	dialogContentStyle  = lipgloss.NewStyle().Border(lipgloss.HiddenBorder()).
 				MarginRight(32)
 	dialogBoxStyle = lipgloss.NewStyle().Border(lipgloss.RoundedBorder(), true, true, true, true).
-			BorderForeground(lipgloss.Color("#874BFD")).
 			Padding(0, 1, 0)
 )
 
 func wrapInDialog(c string, ws tea.WindowSizeMsg, stl lipgloss.Style) string {
 	return lipgloss.Place(ws.Width, ws.Height,
-		lipgloss.Center, lipgloss.Center, dialogBoxStyle.Render(c),
+		lipgloss.Center, lipgloss.Center, stl.Render(c),
 	)
 }
