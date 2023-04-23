@@ -7,11 +7,11 @@ import (
 )
 
 type model struct {
-	log                  logging.I
-	imapAddr             string
-	repos                Repositories
-	windowSize           tea.WindowSizeMsg
-	registerAccountModel tea.Model
+	log        logging.I
+	imapAddr   string
+	repos      Repositories
+	windowSize tea.WindowSizeMsg
+	active     tea.Model
 }
 
 type Repositories struct {
@@ -29,15 +29,15 @@ func Run(l logging.I, addr string, r Repositories) error {
 
 func initialModel(log logging.I, addr string, r Repositories) model {
 	return model{
-		log:                  log,
-		imapAddr:             addr,
-		repos:                r,
-		registerAccountModel: initialRegisterAccountModel(log),
+		log:      log,
+		imapAddr: addr,
+		repos:    r,
+		active:   initialRegisterAccountModel(log),
 	}
 }
 
 func (m model) Init() tea.Cmd {
-	return m.registerAccountModel.Init()
+	return m.active.Init()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -45,9 +45,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
 	}
-	return m.registerAccountModel.Update(msg)
+	return m.active.Update(msg)
 }
 
 func (m model) View() string {
-	return m.registerAccountModel.View()
+	return m.active.View()
 }

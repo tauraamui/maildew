@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -8,19 +9,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/tauraamui/maildew/pkg/logging"
-)
-
-var (
-	focusedStyle       = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-	blurredStyle       = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-	noStyle            = lipgloss.NewStyle()
-	focusedButton      = focusedStyle.Copy().Render("[ Submit ]")
-	blurredButton      = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
-	dialogContentStyle = lipgloss.NewStyle().Border(lipgloss.HiddenBorder()).
-				MarginRight(32)
-	dialogBoxStyle = lipgloss.NewStyle().Border(lipgloss.RoundedBorder(), true, true, true, true).
-			BorderForeground(lipgloss.Color("#874BFD")).
-			Padding(0, 1, 0)
 )
 
 type registerAccountModel struct {
@@ -64,6 +52,8 @@ func (m registerAccountModel) Init() tea.Cmd {
 
 func (m registerAccountModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case registerUserMsg:
+		return errMsgModel{log: m.log, parent: m, err: errors.New("An error has occurred."), windowSize: m.windowSize}, nil
 	/*
 		case registerUserMsg:
 			acc := mail.Account{Username: msg.Username, Password: msg.Password}
@@ -72,6 +62,7 @@ func (m registerAccountModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
 	case tea.KeyMsg:
+		m.log.Debug().Msg("key update from registration model")
 		switch msg.String() {
 		case "ctrl+c", "esc":
 			return m, tea.Quit
@@ -152,9 +143,9 @@ func (m registerAccountModel) View() string {
 		}
 	}
 
-	button := &blurredButton
+	button := &blurredSubmitButton
 	if m.focusIndex == len(m.inputs) {
-		button = &focusedButton
+		button = &focusedSubmitButton
 	}
 	fmt.Fprintf(&b, "\n\n%s", *button)
 
@@ -162,20 +153,6 @@ func (m registerAccountModel) View() string {
 	if textWidth >= 18 {
 		dialogContentStyle.MarginRight(32 - (textWidth - 17))
 	}
-	content := dialogContentStyle.Render(b.String())
-	dialog := lipgloss.Place(m.windowSize.Width, m.windowSize.Height,
-		lipgloss.Center, lipgloss.Center, dialogBoxStyle.Render(content),
-	)
 
-	return dialog
-}
-
-func registerUserCmd(u, p string) func() tea.Msg {
-	return func() tea.Msg {
-		return registerUserMsg{u, p}
-	}
-}
-
-type registerUserMsg struct {
-	Username, Password string
+	return wrapInDialog(dialogContentStyle.Render(b.String()), m.windowSize, dialogBoxStyle)
 }
