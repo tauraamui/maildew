@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -30,7 +31,7 @@ func (m *errMsgModel) Update(msg tea.Msg) tea.Cmd {
 
 func (m *errMsgModel) View() string {
 	var b strings.Builder
-	b.WriteString("Error\n\n")
+	fmt.Fprintf(&b, "%s\n\n", errorStyle.Render("Error"))
 	errStr := m.err.Error()
 	if len(errStr) == 0 {
 		errStr = "Something went wrong"

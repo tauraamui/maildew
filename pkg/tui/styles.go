@@ -10,6 +10,7 @@ import (
 var (
 	focusedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	blurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	errorStyle          = lipgloss.NewStyle().Foreground(lipgloss.Color("#E3242B"))
 	noStyle             = lipgloss.NewStyle()
 	focusedSubmitButton = focusedStyle.Copy().Render("[ Submit ]")
 	focusedOKButton     = focusedStyle.Copy().Render("[ OK ]")
