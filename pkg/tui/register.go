@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -9,20 +8,25 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/tauraamui/maildew/pkg/logging"
+	"github.com/tauraamui/maildew/pkg/mail"
 )
 
 type registerAccountModel struct {
 	log        logging.I
+	imapAddr   string
+	r          Repositories
 	inputs     []textinput.Model
 	focusIndex int
 	windowSize tea.WindowSizeMsg
 	errDialog  dialogModel
 }
 
-func initialRegisterAccountModel(log logging.I) registerAccountModel {
+func initialRegisterAccountModel(log logging.I, imapAddr string, r Repositories) registerAccountModel {
 	m := registerAccountModel{
-		log:    log,
-		inputs: make([]textinput.Model, 2),
+		log:      log,
+		imapAddr: imapAddr,
+		r:        r,
+		inputs:   make([]textinput.Model, 2),
 	}
 
 	var t textinput.Model
@@ -54,13 +58,11 @@ func (m registerAccountModel) Init() tea.Cmd {
 func (m registerAccountModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case registerUserMsg:
-		m.errDialog = &errMsgModel{parent: m, err: errors.New("Test error...")}
-		return m, nil
-		/*
-			case registerUserMsg:
-				acc := mail.Account{Username: msg.Username, Password: msg.Password}
-				mail.RegisterAccount(m.log, m.imapAddr, m.repos.AccountRepo, m.repos.MailboxRepo, m.repos.MessageRepo, acc)
-		*/
+		acc := mail.Account{Username: msg.Username, Password: msg.Password}
+		if err := mail.RegisterAccount(m.log, m.imapAddr, m.r.AccountRepo, m.r.MailboxRepo, m.r.MessageRepo, acc); err != nil {
+			m.errDialog = &errMsgModel{parent: m, err: err}
+			return m, nil
+		}
 	case closeDialogMsg:
 		m.errDialog = nil
 	case tea.WindowSizeMsg:

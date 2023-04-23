@@ -32,7 +32,7 @@ func initialModel(log logging.I, addr string, r Repositories) model {
 		log:      log,
 		imapAddr: addr,
 		repos:    r,
-		active:   initialRegisterAccountModel(log),
+		active:   initialRegisterAccountModel(log, addr, r),
 	}
 }
 
