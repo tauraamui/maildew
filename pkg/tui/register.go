@@ -37,6 +37,8 @@ func initialRegisterAccountModel(log logging.I, imapAddr string, r Repositories)
 		case 0:
 			t.Placeholder = "Username"
 			t.CharLimit = 48
+			t.PromptStyle = focusedStyle
+			t.TextStyle = focusedStyle
 			t.Focus()
 		case 1:
 			t.Placeholder = "Password"
