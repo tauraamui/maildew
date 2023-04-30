@@ -65,6 +65,7 @@ func (m registerAccountModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.errDialog = &errMsgModel{parent: m, err: err}
 			return m, nil
 		}
+		m.r.MailboxRepo.DumpTo(m.log.Writer())
 	case closeDialogMsg:
 		m.errDialog = nil
 	case tea.WindowSizeMsg:
@@ -172,7 +173,12 @@ func (m registerAccountModel) View() string {
 	bg := wrapInDialog(dialogContentStyle.Render(b.String()), m.windowSize, style)
 	if m.errDialog != nil {
 		fg := m.errDialog.View()
-		return PlaceOverlay((m.windowSize.Width/2)-(lipgloss.Width(fg)/2), (m.windowSize.Height/2)-(lipgloss.Height(fg)/2), fg, bg, false)
+		x := (m.windowSize.Width / 2) - (lipgloss.Width(fg) / 2)
+		y := (m.windowSize.Height / 2) - (lipgloss.Height(fg) / 2)
+
+		m.errDialog.SetPosition(lipgloss.Position(x), lipgloss.Position(y))
+		fg = m.errDialog.View()
+		return placeOverlay(x, y, fg, bg, false)
 	}
 
 	return bg

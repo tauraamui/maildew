@@ -75,6 +75,7 @@ type I interface {
 	Debug() Event
 	Info() Event
 	Fatal() Event
+	Writer() io.Writer
 }
 
 type i struct {
@@ -100,6 +101,10 @@ func New(opts ...Options) I {
 		opt.Writer = os.Stdout
 	}
 	return i{lvl: opt.Level, w: opt.Writer}
+}
+
+func (i i) Writer() io.Writer {
+	return i.w
 }
 
 func (i i) Debug() Event {

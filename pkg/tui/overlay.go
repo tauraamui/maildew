@@ -31,7 +31,7 @@ func getLines(s string) (lines []string, widest int) {
 }
 
 // PlaceOverlay places fg on top of bg.
-func PlaceOverlay(
+func placeOverlay(
 	x, y int,
 	fg, bg string,
 	shadow bool, opts ...WhitespaceOption,
@@ -54,7 +54,7 @@ func PlaceOverlay(
 			}
 		}
 
-		fg = PlaceOverlay(0, 0, fg, shadowbg, false, opts...)
+		fg = placeOverlay(0, 0, fg, shadowbg, false, opts...)
 		fgLines, fgWidth = getLines(fg)
 		fgHeight = len(fgLines)
 	}

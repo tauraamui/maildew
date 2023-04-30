@@ -1,6 +1,8 @@
 package mail
 
 import (
+	"io"
+
 	"github.com/dgraph-io/badger/v3"
 	"github.com/tauraamui/maildew/internal/kvs"
 )
@@ -10,6 +12,7 @@ const (
 )
 
 type MailboxRepo interface {
+	DumpTo(w io.Writer) error
 	Save(owner kvs.UUID, mailbox Mailbox) error
 	Close()
 }
@@ -30,6 +33,10 @@ func (r mailboxRepo) Save(owner kvs.UUID, mailbox Mailbox) error {
 	}
 
 	return saveValueWithUUID(r.DB, r.tableName(), owner, rowID, mailbox)
+}
+
+func (r mailboxRepo) DumpTo(w io.Writer) error {
+	return r.DB.DumpTo(w)
 }
 
 func saveValueWithUUID(db kvs.DB, tableName string, ownerID kvs.UUID, rowID uint32, v interface{}) error {

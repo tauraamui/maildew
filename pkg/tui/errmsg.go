@@ -9,13 +9,19 @@ import (
 )
 
 type dialogModel interface {
+	SetPosition(x, y lipgloss.Position)
 	Update(msg tea.Msg) tea.Cmd
 	View() string
 }
 
 type errMsgModel struct {
+	x, y   lipgloss.Position
 	parent tea.Model
 	err    error
+}
+
+func (m *errMsgModel) SetPosition(x, y lipgloss.Position) {
+	m.x, m.y = x, y
 }
 
 func (m *errMsgModel) Update(msg tea.Msg) tea.Cmd {
