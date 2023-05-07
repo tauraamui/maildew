@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"os"
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/google/uuid"
 	"github.com/tauraamui/maildew/internal/kvs"
+	"github.com/tauraamui/maildew/pkg/logging"
 	"github.com/tauraamui/maildew/pkg/mail"
 )
 
@@ -35,15 +36,21 @@ type LocalMessageClone struct {
 }
 
 func main() {
-	log.Println("Experiment for trying to understand box storage in relation to mail and ownership.")
+	f, err := os.OpenFile("maildew.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644)
+	log := logging.New(logging.Options{Level: logging.DEBUG, Writer: f})
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	log.Info().Msg("Experiment for trying to understand box storage in relation to mail and ownership.")
 
 	db, err := kvs.NewMemDB()
 	if err != nil {
-		log.Fatalf("unable to load in memory DB: %v\n", err)
+		log.Fatal().Msgf("unable to load in memory DB: %v\n", err)
 	}
 	defer db.Close()
 
-	mail.RegisterAccount(mail.NewAccountRepo(db), mail.NewMailboxRepo(db), mail.NewMessageRepo(db), mail.Account{
+	mail.RegisterAccount(log, "", mail.NewAccountRepo(db), mail.NewMailboxRepo(db), mail.NewMessageRepo(db), mail.Account{
 		Username: "test@place.com",
 		Password: "fakepassword",
 	})
@@ -60,7 +67,7 @@ func main() {
 	}
 
 	if err := accRepo.Save(acc); err != nil {
-		log.Fatalf("unable to create local account in DB: %v\n", err)
+		log.Fatal().Msgf("unable to create local account in DB: %v\n", err)
 	}
 
 	inbox := LocalBoxClone{
@@ -70,7 +77,7 @@ func main() {
 	}
 
 	if err := boxRepo.Save(acc.LocalRef, inbox); err != nil {
-		log.Fatalf("unable to store local box in DB: %v\n", err)
+		log.Fatal().Msgf("unable to store local box in DB: %v\n", err)
 	}
 
 	junk := LocalBoxClone{
@@ -80,7 +87,7 @@ func main() {
 	}
 
 	if err := boxRepo.Save(acc.LocalRef, junk); err != nil {
-		log.Fatalf("unable to store local box in DB: %v\n", err)
+		log.Fatal().Msgf("unable to store local box in DB: %v\n", err)
 	}
 
 	testMsgs := []LocalMessageClone{
@@ -102,7 +109,7 @@ func main() {
 
 	for _, testMsg := range testMsgs {
 		if err := msgRepo.Save(inbox.LocalRef, testMsg); err != nil {
-			log.Fatalf("unable to store local message in DB: %v\n", err)
+			log.Fatal().Msgf("unable to store local message in DB: %v\n", err)
 		}
 	}
 
@@ -111,7 +118,7 @@ func main() {
 		LocalRef:  uuid.New(),
 		Subject:   "Definitely some spam",
 	}); err != nil {
-		log.Fatalf("unable to store local message in DB: %v\n", err)
+		log.Fatal().Msgf("unable to store local message in DB: %v\n", err)
 	}
 
 	/*
@@ -122,7 +129,7 @@ func main() {
 
 	inboxmsgs, err := msgRepo.GetMessages(inbox.LocalRef)
 	if err != nil {
-		log.Fatalf("unable to acquire messages owned by mailbox %s from DB: %v\n", inbox.LocalRef, err)
+		log.Fatal().Msgf("unable to acquire messages owned by mailbox %s from DB: %v\n", inbox.LocalRef, err)
 	}
 
 	for _, msg := range inboxmsgs {
@@ -131,7 +138,7 @@ func main() {
 
 	junkmsgs, err := msgRepo.GetMessages(junk.LocalRef)
 	if err != nil {
-		log.Fatalf("unable to acquire messages owned by mailbox %s from DB: %v\n", junk.LocalRef, err)
+		log.Fatal().Msgf("unable to acquire messages owned by mailbox %s from DB: %v\n", junk.LocalRef, err)
 	}
 
 	for _, msg := range junkmsgs {

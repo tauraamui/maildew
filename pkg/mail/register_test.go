@@ -2,12 +2,15 @@ package mail
 
 import (
 	"errors"
+	"io"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/emersion/go-imap"
 	"github.com/matryer/is"
 	"github.com/tauraamui/maildew/internal/kvs"
+	"github.com/tauraamui/maildew/pkg/logging"
 )
 
 type mockRemoteConnection struct {
@@ -53,9 +56,15 @@ func (mc mockRemoteConnection) Fetch(seqset *imap.SeqSet, items []imap.FetchItem
 	return nil
 }
 
+func (mc mockRemoteConnection) Close() error { return nil }
+
 type mockAccountRepo struct{}
 
 func (mar mockAccountRepo) Save(user Account) error {
+	return nil
+}
+
+func (mar mockAccountRepo) DumpTo(w io.Writer) error {
 	return nil
 }
 
@@ -82,6 +91,10 @@ func (mmr *mockMailboxRepo) Save(owner kvs.UUID, mailbox Mailbox) error {
 	return mmr.err
 }
 
+func (mmr *mockMailboxRepo) DumpTo(w io.Writer) error {
+	return nil
+}
+
 func (mmr mockMailboxRepo) Close() {}
 
 type mockMessageRepo struct {
@@ -96,9 +109,13 @@ func (mmsgr *mockMessageRepo) Save(owner kvs.UUID, msg Message) error {
 	return mmsgr.err
 }
 
+func (mmsgr *mockMessageRepo) DumpTo(w io.Writer) error {
+	return nil
+}
+
 func (mmsgr mockMessageRepo) Close() {}
 
-func overloadAcquireClientConn(overload func(string, Account) (RemoteConnection, error)) func() {
+func overloadAcquireClientConn(overload func(string, Account, bool) (RemoteConnection, error)) func() {
 	acquireClientConnRef := acquireClientConn
 	acquireClientConn = overload
 	return func() {
@@ -139,10 +156,12 @@ func makeRemoteConnectionData() map[string][]*imap.Message {
 }
 
 func TestRegisterAccountSuccessSyncedRemoteMailboxes(t *testing.T) {
+	fakeStdout := strings.Builder{}
+	log := logging.New(logging.Options{Level: logging.DEBUG, Writer: &fakeStdout})
 	mconn := &mockRemoteConnection{
 		mailboxes: makeRemoteConnectionData(),
 	}
-	reset := overloadAcquireClientConn(func(s string, a Account) (RemoteConnection, error) {
+	reset := overloadAcquireClientConn(func(s string, a Account, ssl bool) (RemoteConnection, error) {
 		return mconn, nil
 	})
 	defer reset()
@@ -153,7 +172,7 @@ func TestRegisterAccountSuccessSyncedRemoteMailboxes(t *testing.T) {
 
 	is := is.New(t)
 
-	is.NoErr(RegisterAccount(accRepo, &mbRepo, &msgRepo, Account{Username: "test@place.com", Password: "efewfweoifjio"}))
+	is.NoErr(RegisterAccount(log, "", accRepo, &mbRepo, &msgRepo, Account{Username: "test@place.com", Password: "efewfweoifjio"}))
 
 	is.Equal(len(mbRepo.saved), 2)
 	is = is.NewRelaxed(t)
@@ -170,12 +189,15 @@ func TestRegisterAccountSuccessSyncedRemoteMailboxes(t *testing.T) {
 }
 
 func TestRegisterAccountErrorDuringListingMailboxes(t *testing.T) {
+	fakeStdout := strings.Builder{}
+	log := logging.New(logging.Options{Level: logging.DEBUG, Writer: &fakeStdout})
+
 	mconn := &mockRemoteConnection{
 		mailboxes:         makeRemoteConnectionData(),
 		returnErrAfterNum: 1,
 		err:               errors.New("failed to acquire next mailbox"),
 	}
-	reset := overloadAcquireClientConn(func(s string, a Account) (RemoteConnection, error) {
+	reset := overloadAcquireClientConn(func(s string, a Account, ssl bool) (RemoteConnection, error) {
 		return mconn, nil
 	})
 	defer reset()
@@ -186,7 +208,7 @@ func TestRegisterAccountErrorDuringListingMailboxes(t *testing.T) {
 
 	is := is.NewRelaxed(t)
 
-	err := RegisterAccount(accRepo, &mbRepo, &msgRepo, Account{Username: "test@place.com", Password: "efewfweoifjio"})
+	err := RegisterAccount(log, "", accRepo, &mbRepo, &msgRepo, Account{Username: "test@place.com", Password: "efewfweoifjio"})
 	is.Equal(err.Error(), "failed to acquire next mailbox")
 
 	is = is.New(t)
@@ -195,10 +217,13 @@ func TestRegisterAccountErrorDuringListingMailboxes(t *testing.T) {
 }
 
 func TestRegisterAccountErrorDuringStoringMailboxes(t *testing.T) {
+	fakeStdout := strings.Builder{}
+	log := logging.New(logging.Options{Level: logging.DEBUG, Writer: &fakeStdout})
+
 	mconn := &mockRemoteConnection{
 		mailboxes: makeRemoteConnectionData(),
 	}
-	reset := overloadAcquireClientConn(func(s string, a Account) (RemoteConnection, error) {
+	reset := overloadAcquireClientConn(func(s string, a Account, ssl bool) (RemoteConnection, error) {
 		return mconn, nil
 	})
 	defer reset()
@@ -212,7 +237,7 @@ func TestRegisterAccountErrorDuringStoringMailboxes(t *testing.T) {
 
 	is := is.NewRelaxed(t)
 
-	err := RegisterAccount(accRepo, &mbRepo, &msgRepo, Account{Username: "test@place.com", Password: "efewfweoifjio"})
+	err := RegisterAccount(log, "", accRepo, &mbRepo, &msgRepo, Account{Username: "test@place.com", Password: "efewfweoifjio"})
 	is.Equal(err.Error(), "failed to persist mailbox")
 
 	is = is.New(t)

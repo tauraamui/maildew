@@ -73,15 +73,6 @@ func registerAccountCmd(l logging.I, imapAddr string, u, p string, r Repositorie
 
 func (m registerAccountModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	/*
-		case registerUserMsg:
-			acc := mail.Account{Username: msg.Username, Password: msg.Password}
-			if err := mail.RegisterAccount(m.log, m.imapAddr, m.r.AccountRepo, m.r.MailboxRepo, m.r.MessageRepo, acc); err != nil {
-				m.errDialog = &errMsgModel{parent: m, err: err}
-				return m, nil
-			}
-			m.r.MailboxRepo.DumpTo(m.log.Writer())
-	*/
 	case errorMessageMsg:
 		m.errDialog = &errMsgModel{
 			parent: m,
