@@ -57,15 +57,37 @@ func (m registerAccountModel) Init() tea.Cmd {
 	return textinput.Blink
 }
 
+type errorMessageMsg struct {
+	err error
+}
+
+func registerAccountCmd(l logging.I, imapAddr string, u, p string, r Repositories) func() tea.Msg {
+	return func() tea.Msg {
+		acc := mail.Account{Username: u, Password: p}
+		if err := mail.RegisterAccount(l, imapAddr, r.AccountRepo, r.MailboxRepo, r.MessageRepo, acc); err != nil {
+			return errorMessageMsg{err}
+		}
+		return nil
+	}
+}
+
 func (m registerAccountModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case registerUserMsg:
-		acc := mail.Account{Username: msg.Username, Password: msg.Password}
-		if err := mail.RegisterAccount(m.log, m.imapAddr, m.r.AccountRepo, m.r.MailboxRepo, m.r.MessageRepo, acc); err != nil {
-			m.errDialog = &errMsgModel{parent: m, err: err}
-			return m, nil
+	/*
+		case registerUserMsg:
+			acc := mail.Account{Username: msg.Username, Password: msg.Password}
+			if err := mail.RegisterAccount(m.log, m.imapAddr, m.r.AccountRepo, m.r.MailboxRepo, m.r.MessageRepo, acc); err != nil {
+				m.errDialog = &errMsgModel{parent: m, err: err}
+				return m, nil
+			}
+			m.r.MailboxRepo.DumpTo(m.log.Writer())
+	*/
+	case errorMessageMsg:
+		m.errDialog = &errMsgModel{
+			parent: m,
+			err:    msg.err,
 		}
-		m.r.MailboxRepo.DumpTo(m.log.Writer())
+		return m, nil
 	case closeDialogMsg:
 		m.errDialog = nil
 	case tea.WindowSizeMsg:
@@ -82,7 +104,7 @@ func (m registerAccountModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			s := msg.String()
 
 			if s == "enter" && m.focusIndex == len(m.inputs) {
-				return m, registerUserCmd(m.inputs[0].Value(), m.inputs[1].Value())
+				return m, registerAccountCmd(m.log, m.imapAddr, m.inputs[0].Value(), m.inputs[1].Value(), m.r)
 			}
 
 			if s == "up" || s == "shift+tab" {
