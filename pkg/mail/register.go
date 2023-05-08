@@ -3,6 +3,7 @@ package mail
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/emersion/go-imap"
 	imapclient "github.com/emersion/go-imap/client"
@@ -121,11 +122,14 @@ func persistAccount(ar AccountRepo, acc *Account) error {
 }
 
 func persistMailboxes(conn RemoteConnection, mbRepo MailboxRepo, msgRepo MessageRepo, acc Account) error {
-	done := make(chan error)
+	done := make(chan error, 1)
 	defer close(done)
 	mailboxes := make(chan *imap.MailboxInfo, 10)
 
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		done <- conn.List("", "*", mailboxes)
 	}()
 
@@ -135,6 +139,8 @@ func persistMailboxes(conn RemoteConnection, mbRepo MailboxRepo, msgRepo Message
 			return err
 		}
 	}
+
+	wg.Wait()
 
 	if err := <-done; err != nil {
 		return err
