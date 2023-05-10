@@ -54,6 +54,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			}
 		}
+	case openMailboxListMsg:
+		m.active = msg.mailboxListModel
 	}
 
 	if hasActive {
