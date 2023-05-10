@@ -28,12 +28,14 @@ func Run(l logging.I, addr string, r Repositories) error {
 }
 
 func initialModel(log logging.I, addr string, r Repositories) model {
-	return model{
+	m := model{
 		log:      log,
 		imapAddr: addr,
 		repos:    r,
-		active:   initialRegisterAccountModel(log, addr, r),
 	}
+
+	m.active = initialRegisterAccountModel(log, m, addr, r)
+	return m
 }
 
 func (m model) Init() tea.Cmd {
@@ -41,13 +43,29 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	hasActive := m.active != nil
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.windowSize = msg
+	case tea.KeyMsg:
+		if !hasActive {
+			switch msg.String() {
+			case "ctrl+c", "esc":
+				return m, tea.Quit
+			}
+		}
 	}
-	return m.active.Update(msg)
+
+	if hasActive {
+		return m.active.Update(msg)
+	}
+
+	return m, nil
 }
 
 func (m model) View() string {
+	if m.active == nil {
+		return "maildew app has no active view at this time"
+	}
 	return m.active.View()
 }

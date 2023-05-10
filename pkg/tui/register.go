@@ -13,6 +13,7 @@ import (
 
 type registerAccountModel struct {
 	log        logging.I
+	parent     tea.Model
 	imapAddr   string
 	r          Repositories
 	inputs     []textinput.Model
@@ -21,9 +22,10 @@ type registerAccountModel struct {
 	errDialog  dialogModel
 }
 
-func initialRegisterAccountModel(log logging.I, imapAddr string, r Repositories) registerAccountModel {
+func initialRegisterAccountModel(log logging.I, parent tea.Model, imapAddr string, r Repositories) registerAccountModel {
 	m := registerAccountModel{
 		log:      log,
+		parent:   parent,
 		imapAddr: imapAddr,
 		r:        r,
 		inputs:   make([]textinput.Model, 2),
@@ -61,18 +63,22 @@ type errorMessageMsg struct {
 	err error
 }
 
+type returnToParentMsg struct{}
+
 func registerAccountCmd(l logging.I, imapAddr string, u, p string, r Repositories) func() tea.Msg {
 	return func() tea.Msg {
 		acc := mail.Account{Username: u, Password: p}
 		if err := mail.RegisterAccount(l, imapAddr, r.AccountRepo, r.MailboxRepo, r.MessageRepo, acc); err != nil {
 			return errorMessageMsg{err}
 		}
-		return nil
+		return returnToParentMsg{}
 	}
 }
 
 func (m registerAccountModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case returnToParentMsg:
+		return m.parent, nil
 	case errorMessageMsg:
 		m.errDialog = &errMsgModel{
 			parent: m,
