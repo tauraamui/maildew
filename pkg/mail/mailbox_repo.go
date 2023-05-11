@@ -14,6 +14,7 @@ const (
 type MailboxRepo interface {
 	DumpTo(w io.Writer) error
 	Save(owner kvs.UUID, mailbox Mailbox) error
+	FetchByOwner(owner kvs.UUID) ([]Mailbox, error)
 	Close()
 }
 
@@ -26,6 +27,10 @@ type mailboxRepo struct {
 	seq *badger.Sequence
 }
 
+func (r mailboxRepo) DumpTo(w io.Writer) error {
+	return r.DB.DumpTo(w)
+}
+
 func (r mailboxRepo) Save(owner kvs.UUID, mailbox Mailbox) error {
 	rowID, err := r.nextRowID()
 	if err != nil {
@@ -35,8 +40,44 @@ func (r mailboxRepo) Save(owner kvs.UUID, mailbox Mailbox) error {
 	return saveValueWithUUID(r.DB, r.tableName(), owner, rowID, mailbox)
 }
 
-func (r mailboxRepo) DumpTo(w io.Writer) error {
-	return r.DB.DumpTo(w)
+func (r mailboxRepo) FetchByOwner(owner kvs.UUID) ([]Mailbox, error) {
+	return nil, nil
+}
+
+func fetchByOwner[E Account | Mailbox | Message](db kvs.DB, tableName string, owner kvs.UUID) ([]E, error) {
+	entries := make([]E, 1)
+
+	blankEntries := kvs.ConvertToBlankEntriesWithUUID(tableName, owner, 0, entries[0])
+	for _, ent := range blankEntries {
+		// iterate over all stored values for this entry
+		prefix := ent.PrefixKey()
+		db.View(func(txn *badger.Txn) error {
+			it := txn.NewIterator(badger.DefaultIteratorOptions)
+			defer it.Close()
+
+			var rows uint32 = 0
+			for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+				if rows >= uint32(len(entries)) {
+					entries = append(entries)
+				}
+				item := it.Item()
+				ent.RowID = rows
+				if err := item.Value(func(val []byte) error {
+					ent.Data = val
+					return nil
+				}); err != nil {
+					return err
+				}
+
+				if err := kvs.LoadEntry(&entries[rows], ent); err != nil {
+					return err
+				}
+				rows++
+			}
+			return nil
+		})
+	}
+	return entries, nil
 }
 
 func saveValueWithUUID(db kvs.DB, tableName string, ownerID kvs.UUID, rowID uint32, v interface{}) error {
@@ -56,7 +97,7 @@ func (r mailboxRepo) tableName() string {
 
 func (r mailboxRepo) nextRowID() (uint32, error) {
 	if r.seq == nil {
-		seq, err := r.DB.GetSeq([]byte(accountsTableName), 1)
+		seq, err := r.DB.GetSeq([]byte(r.tableName()), 1)
 		if err != nil {
 			return 0, err
 		}
