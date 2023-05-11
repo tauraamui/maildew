@@ -10,6 +10,7 @@ type mailboxListModel struct {
 	log        logging.I
 	windowSize tea.WindowSizeMsg
 	mbrepo     mail.MailboxRepo
+	list       [10]string
 }
 
 func initialMailboxListModel(log logging.I, mbrepo mail.MailboxRepo) mailboxListModel {

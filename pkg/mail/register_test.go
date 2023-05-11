@@ -91,6 +91,10 @@ func (mmr *mockMailboxRepo) Save(owner kvs.UUID, mailbox Mailbox) error {
 	return mmr.err
 }
 
+func (mmr *mockMailboxRepo) FetchByOwner(owner kvs.UUID) ([]Mailbox, error) {
+	return nil, nil
+}
+
 func (mmr *mockMailboxRepo) DumpTo(w io.Writer) error {
 	return nil
 }
