@@ -41,7 +41,7 @@ func (r mailboxRepo) Save(owner kvs.UUID, mailbox Mailbox) error {
 }
 
 func (r mailboxRepo) FetchByOwner(owner kvs.UUID) ([]Mailbox, error) {
-	return nil, nil
+	return fetchByOwner[Mailbox](r.DB, r.tableName(), owner)
 }
 
 func fetchByOwner[E Account | Mailbox | Message](db kvs.DB, tableName string, owner kvs.UUID) ([]E, error) {
