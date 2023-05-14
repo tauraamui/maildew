@@ -58,7 +58,7 @@ func fetchByOwner[E Account | Mailbox | Message](db kvs.DB, tableName string, ow
 			var rows uint32 = 0
 			for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 				if rows >= uint32(len(entries)) {
-					entries = append(entries)
+					entries = append(entries, *new(E))
 				}
 				item := it.Item()
 				ent.RowID = rows
