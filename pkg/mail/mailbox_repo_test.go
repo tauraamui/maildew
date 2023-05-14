@@ -16,7 +16,7 @@ import (
 func TestSaveMailbox(t *testing.T) {
 	is := is.New(t)
 
-	r, db, err := resolveMailboxRepo()
+	r, db, err := resolveMailboxRepoWithDB()
 	is.NoErr(err)
 	is.True(r != nil)
 	defer r.Close()
@@ -30,6 +30,7 @@ func TestSaveMailbox(t *testing.T) {
 	}
 
 	is.NoErr(r.Save(ownerUUID, mailbox))
+	is.True(db != nil)
 	is.NoErr(compareContentsWithExpected(db, map[string][]byte{
 		"mailboxes": {0, 0, 0, 0, 0, 0, 0, 1},
 		"mailboxes.uuid.f47ac10b-58cc-0372-8567-0e02b2c3d479.0": helperConvertToBytes(t, fmt.Sprintf("\"%s\"", uuidID.String())),
@@ -38,17 +39,45 @@ func TestSaveMailbox(t *testing.T) {
 
 }
 
-func resolveMailboxRepo() (mail.MailboxRepo, kvs.DB, error) {
+func TestFetchingMultipleMailboxes(t *testing.T) {
+	is := is.New(t)
+
+	r, err := resolveMailboxRepo()
+	is.NoErr(err)
+	is.True(r != nil)
+	defer r.Close()
+
+	ownerUUID := uuid.MustParse("f47ac10b-58cc-0372-8567-0e02b2c3d479")
+	toSave := [10]mail.Mailbox{}
+	for i := 0; i < 10; i++ {
+		toSave[i] = mail.Mailbox{
+			UUID: uuid.New(),
+			Name: fmt.Sprintf("INBOX%d", i),
+		}
+		r.Save(ownerUUID, toSave[i])
+	}
+
+	fetched, err := r.FetchByOwner(ownerUUID)
+	is.NoErr(err)
+	is.Equal(len(fetched), 10)
+}
+
+func resolveMailboxRepo() (mail.MailboxRepo, error) {
+	mb, _, err := resolveMailboxRepoWithDB()
+	return mb, err
+}
+
+func resolveMailboxRepoWithDB() (mail.MailboxRepo, *kvs.DB, error) {
 	db, err := kvs.NewMemDB()
 	if err != nil {
-		return nil, db, err
+		return nil, &db, err
 	}
 
 	mr := mail.NewMailboxRepo(db)
-	return mr, db, nil
+	return mr, &db, nil
 }
 
-func compareContentsWithExpected(db kvs.DB, exp map[string][]byte) error {
+func compareContentsWithExpected(db *kvs.DB, exp map[string][]byte) error {
 	return db.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchSize = 10
