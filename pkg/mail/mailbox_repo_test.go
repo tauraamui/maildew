@@ -60,6 +60,17 @@ func TestFetchingMultipleMailboxes(t *testing.T) {
 	fetched, err := r.FetchByOwner(ownerUUID)
 	is.NoErr(err)
 	is.Equal(len(fetched), 10)
+
+	is.Equal(fetched[0].Name, "INBOX0")
+	is.Equal(fetched[1].Name, "INBOX1")
+	is.Equal(fetched[2].Name, "INBOX2")
+	is.Equal(fetched[3].Name, "INBOX3")
+	is.Equal(fetched[4].Name, "INBOX4")
+	is.Equal(fetched[5].Name, "INBOX5")
+	is.Equal(fetched[6].Name, "INBOX6")
+	is.Equal(fetched[7].Name, "INBOX7")
+	is.Equal(fetched[8].Name, "INBOX8")
+	is.Equal(fetched[9].Name, "INBOX9")
 }
 
 func resolveMailboxRepo() (mail.MailboxRepo, error) {
