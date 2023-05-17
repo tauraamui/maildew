@@ -50,7 +50,7 @@ func main() {
 	}
 	defer db.Close()
 
-	mail.RegisterAccount(log, "", mail.NewAccountRepo(db), mail.NewMailboxRepo(db), mail.NewMessageRepo(db), mail.Account{
+	mail.RegisterAccount(log, "", mail.NewAccountRepo(db), mail.NewMailboxRepo(db), mail.NewMessageRepo(db), &mail.Account{
 		Username: "test@place.com",
 		Password: "fakepassword",
 	})

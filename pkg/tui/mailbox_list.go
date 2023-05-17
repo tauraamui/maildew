@@ -27,7 +27,6 @@ func initialMailboxListModel(log logging.I, mbrepo mail.MailboxRepo, acc mail.Ac
 
 func (m *mailboxListModel) Init() tea.Cmd {
 	mboxes, err := m.mbrepo.FetchByOwner(m.acc.UUID)
-	m.log.Debug().Msgf("retreived %d mailboxes for account %s", len(mboxes), m.acc.UUID.String())
 	if err != nil {
 		m.log.Error().Msgf("unable to fetch mailboxes: %w", err)
 		// not sure how to handle this yet

@@ -155,7 +155,19 @@ func makeRemoteConnectionData() map[string][]*imap.Message {
 				},
 			},
 		},
-		"SPAM": {},
+		"INBOX0":  {},
+		"INBOX1":  {},
+		"INBOX2":  {},
+		"INBOX3":  {},
+		"INBOX4":  {},
+		"INBOX5":  {},
+		"INBOX6":  {},
+		"INBOX7":  {},
+		"INBOX8":  {},
+		"INBOX9":  {},
+		"INBOX10": {},
+		"INBOX11": {},
+		"SPAM":    {},
 	}
 }
 
@@ -176,12 +188,24 @@ func TestRegisterAccountSuccessSyncedRemoteMailboxes(t *testing.T) {
 
 	is := is.New(t)
 
-	is.NoErr(RegisterAccount(log, "", accRepo, &mbRepo, &msgRepo, Account{Username: "test@place.com", Password: "efewfweoifjio"}))
+	is.NoErr(RegisterAccount(log, "", accRepo, &mbRepo, &msgRepo, &Account{Username: "test@place.com", Password: "efewfweoifjio"}))
 
-	is.Equal(len(mbRepo.saved), 2)
+	is.Equal(len(mbRepo.saved), 14)
 	is = is.NewRelaxed(t)
 	is.Equal(mbRepo.saved[0].mb.Name, "INBOX")
-	is.Equal(mbRepo.saved[1].mb.Name, "SPAM")
+	is.Equal(mbRepo.saved[1].mb.Name, "INBOX0")
+	is.Equal(mbRepo.saved[2].mb.Name, "INBOX1")
+	is.Equal(mbRepo.saved[3].mb.Name, "INBOX10")
+	is.Equal(mbRepo.saved[4].mb.Name, "INBOX11")
+	is.Equal(mbRepo.saved[5].mb.Name, "INBOX2")
+	is.Equal(mbRepo.saved[6].mb.Name, "INBOX3")
+	is.Equal(mbRepo.saved[7].mb.Name, "INBOX4")
+	is.Equal(mbRepo.saved[8].mb.Name, "INBOX5")
+	is.Equal(mbRepo.saved[9].mb.Name, "INBOX6")
+	is.Equal(mbRepo.saved[10].mb.Name, "INBOX7")
+	is.Equal(mbRepo.saved[11].mb.Name, "INBOX8")
+	is.Equal(mbRepo.saved[12].mb.Name, "INBOX9")
+	is.Equal(mbRepo.saved[13].mb.Name, "SPAM")
 
 	is = is.New(t)
 	is.Equal(len(msgRepo.saved), 4)
@@ -212,7 +236,7 @@ func TestRegisterAccountErrorDuringListingMailboxes(t *testing.T) {
 
 	is := is.NewRelaxed(t)
 
-	err := RegisterAccount(log, "", accRepo, &mbRepo, &msgRepo, Account{Username: "test@place.com", Password: "efewfweoifjio"})
+	err := RegisterAccount(log, "", accRepo, &mbRepo, &msgRepo, &Account{Username: "test@place.com", Password: "efewfweoifjio"})
 	is.Equal(err.Error(), "failed to acquire next mailbox")
 
 	is = is.New(t)
@@ -241,7 +265,7 @@ func TestRegisterAccountErrorDuringStoringMailboxes(t *testing.T) {
 
 	is := is.NewRelaxed(t)
 
-	err := RegisterAccount(log, "", accRepo, &mbRepo, &msgRepo, Account{Username: "test@place.com", Password: "efewfweoifjio"})
+	err := RegisterAccount(log, "", accRepo, &mbRepo, &msgRepo, &Account{Username: "test@place.com", Password: "efewfweoifjio"})
 	is.Equal(err.Error(), "failed to persist mailbox")
 
 	is = is.New(t)

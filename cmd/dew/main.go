@@ -23,8 +23,7 @@ func main() {
 	defer f.Close()
 
 	log := logging.New(logging.Options{Level: logging.DEBUG, Writer: f})
-	log.Debug().Msg("test debug message")
-	log.Info().Msg("MAILDEW REGISTRATION")
+	log.Info().Msg("MAILDEW v0.0.0a")
 
 	l, err := setupListener()
 	if err != nil {
@@ -32,6 +31,21 @@ func main() {
 	}
 
 	backend := mock.New()
+	backend.RegisterUser("username", "password")
+	for i := 0; i < 11; i++ {
+		backend.CreateMailbox("username", fmt.Sprintf("INBOX%d", i+1))
+	}
+
+	body := "From: contact@example.org\r\n" +
+		"To: contact@example.org\r\n" +
+		"Subject: A little message, just for you\r\n" +
+		"Date: Wed, 11 May 2016 14:31:59 +0000\r\n" +
+		"Message-ID: <0000000@localhost/>\r\n" +
+		"Content-Type: text/plain\r\n" +
+		"\r\n" +
+		"Hi there :)"
+	backend.StoreMessage("username", "INBOX1", body)
+
 	err, shutdown := startLocalServerWithBackend(l, backend)
 	if err != nil {
 		log.Fatal().Msgf("unable to start local IMAP server: %v", err)
@@ -45,17 +59,6 @@ func main() {
 	accRepo := mail.NewAccountRepo(db)
 	mbRepo := mail.NewMailboxRepo(db)
 	msgRepo := mail.NewMessageRepo(db)
-
-	/*
-		acc := mail.Account{
-			Username: username,
-			Password: password,
-		}
-
-		if err := mail.RegisterAccount(log, l.Addr().String(), accRepo, mbRepo, msgRepo, acc); err != nil {
-			log.Fatal().Msgf("failed to register new account: %v", err)
-		}
-	*/
 
 	if err := tui.Run(
 		log,
