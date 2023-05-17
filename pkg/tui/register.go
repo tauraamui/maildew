@@ -63,15 +63,17 @@ type errorMessageMsg struct {
 	err error
 }
 
-type returnToParentMsg struct{}
+type returnToParentMsg struct {
+	acc mail.Account
+}
 
 func registerAccountCmd(l logging.I, imapAddr string, u, p string, r Repositories) func() tea.Msg {
 	return func() tea.Msg {
 		acc := mail.Account{Username: u, Password: p}
-		if err := mail.RegisterAccount(l, imapAddr, r.AccountRepo, r.MailboxRepo, r.MessageRepo, acc); err != nil {
+		if err := mail.RegisterAccount(l, imapAddr, r.AccountRepo, r.MailboxRepo, r.MessageRepo, &acc); err != nil {
 			return errorMessageMsg{err}
 		}
-		return returnToParentMsg{}
+		return returnToParentMsg{acc}
 	}
 }
 
@@ -79,10 +81,10 @@ type openMailboxListMsg struct {
 	mailboxListModel tea.Model
 }
 
-func openMailboxListCmd(l logging.I, mbRepo mail.MailboxRepo) func() tea.Msg {
+func openMailboxListCmd(l logging.I, mbRepo mail.MailboxRepo, acc mail.Account) func() tea.Msg {
 	return func() tea.Msg {
 		return openMailboxListMsg{
-			mailboxListModel: initialMailboxListModel(l, mbRepo),
+			mailboxListModel: initialMailboxListModel(l, mbRepo, acc),
 		}
 	}
 }
@@ -90,7 +92,7 @@ func openMailboxListCmd(l logging.I, mbRepo mail.MailboxRepo) func() tea.Msg {
 func (m registerAccountModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case returnToParentMsg:
-		return m.parent, openMailboxListCmd(m.log, m.r.MailboxRepo)
+		return m.parent, openMailboxListCmd(m.log, m.r.MailboxRepo, msg.acc)
 	case errorMessageMsg:
 		m.errDialog = &errMsgModel{
 			parent: m,

@@ -74,6 +74,7 @@ func (e e) Msgf(s string, a ...any) (n int, err error) {
 type I interface {
 	Debug() Event
 	Info() Event
+	Error() Event
 	Fatal() Event
 	Writer() io.Writer
 }
@@ -119,6 +120,14 @@ func (i i) Info() Event {
 	return e{
 		currentLevel: i.lvl,
 		level:        INFO,
+		stdout:       i.w,
+	}
+}
+
+func (i i) Error() Event {
+	return e{
+		currentLevel: i.lvl,
+		level:        ERROR,
 		stdout:       i.w,
 	}
 }
