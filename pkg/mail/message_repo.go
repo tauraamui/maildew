@@ -11,7 +11,7 @@ const (
 
 type MessageRepo interface {
 	Save(owner kvs.UUID, msg Message) error
-	Close()
+	Close() error
 }
 
 func NewMessageRepo(db kvs.DB) MessageRepo {
@@ -52,9 +52,10 @@ func (r messageRepo) nextRowID() (uint32, error) {
 	return uint32(s), nil
 }
 
-func (r messageRepo) Close() {
+func (r messageRepo) Close() error {
 	if r.seq == nil {
-		return
+		return nil
 	}
 	r.seq.Release()
+	return nil
 }

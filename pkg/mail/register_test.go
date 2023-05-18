@@ -114,10 +114,10 @@ func (mmsgr *mockMessageRepo) Save(owner kvs.UUID, msg Message) error {
 }
 
 func (mmsgr *mockMessageRepo) DumpTo(w io.Writer) error {
-	return nil
+	return mmsgr.err
 }
 
-func (mmsgr mockMessageRepo) Close() {}
+func (mmsgr mockMessageRepo) Close() error { return nil }
 
 func overloadAcquireClientConn(overload func(string, Account, bool) (RemoteConnection, error)) func() {
 	acquireClientConnRef := acquireClientConn
@@ -155,20 +155,38 @@ func makeRemoteConnectionData() map[string][]*imap.Message {
 				},
 			},
 		},
-		"INBOX0":  {},
-		"INBOX1":  {},
-		"INBOX2":  {},
-		"INBOX3":  {},
-		"INBOX4":  {},
-		"INBOX5":  {},
-		"INBOX6":  {},
-		"INBOX7":  {},
-		"INBOX8":  {},
-		"INBOX9":  {},
-		"INBOX10": {},
-		"INBOX11": {},
-		"SPAM":    {},
+		"WORK":     {},
+		"SHOPPING": {},
+		"SPAM":     {},
 	}
+}
+
+func TestRegisterAccountSuccessAgainstRealKVSInstance(t *testing.T) {
+	fakeStdout := strings.Builder{}
+	log := logging.New(logging.Options{Level: logging.DEBUG, Writer: &fakeStdout})
+	is := is.New(t)
+
+	mconn := &mockRemoteConnection{
+		mailboxes: makeRemoteConnectionData(),
+	}
+	reset := overloadAcquireClientConn(func(s string, a Account, ssl bool) (RemoteConnection, error) {
+		return mconn, nil
+	})
+	defer reset()
+
+	db, err := kvs.NewMemDB()
+	is.NoErr(err)
+
+	accRepo := NewAccountRepo(db)
+	mbRepo := NewMailboxRepo(db)
+	msgRepo := NewMessageRepo(db)
+
+	acc := Account{Username: "test@place.com", Password: "efewfweoifjio"}
+	is.NoErr(RegisterAccount(log, "", accRepo, mbRepo, msgRepo, &acc))
+	mboxes, err := mbRepo.FetchByOwner(acc.UUID)
+	is.NoErr(err)
+
+	is.Equal(len(mboxes), len(mconn.mailboxes))
 }
 
 func TestRegisterAccountSuccessSyncedRemoteMailboxes(t *testing.T) {
@@ -190,22 +208,12 @@ func TestRegisterAccountSuccessSyncedRemoteMailboxes(t *testing.T) {
 
 	is.NoErr(RegisterAccount(log, "", accRepo, &mbRepo, &msgRepo, &Account{Username: "test@place.com", Password: "efewfweoifjio"}))
 
-	is.Equal(len(mbRepo.saved), 14)
+	is.Equal(len(mbRepo.saved), 4)
 	is = is.NewRelaxed(t)
 	is.Equal(mbRepo.saved[0].mb.Name, "INBOX")
-	is.Equal(mbRepo.saved[1].mb.Name, "INBOX0")
-	is.Equal(mbRepo.saved[2].mb.Name, "INBOX1")
-	is.Equal(mbRepo.saved[3].mb.Name, "INBOX10")
-	is.Equal(mbRepo.saved[4].mb.Name, "INBOX11")
-	is.Equal(mbRepo.saved[5].mb.Name, "INBOX2")
-	is.Equal(mbRepo.saved[6].mb.Name, "INBOX3")
-	is.Equal(mbRepo.saved[7].mb.Name, "INBOX4")
-	is.Equal(mbRepo.saved[8].mb.Name, "INBOX5")
-	is.Equal(mbRepo.saved[9].mb.Name, "INBOX6")
-	is.Equal(mbRepo.saved[10].mb.Name, "INBOX7")
-	is.Equal(mbRepo.saved[11].mb.Name, "INBOX8")
-	is.Equal(mbRepo.saved[12].mb.Name, "INBOX9")
-	is.Equal(mbRepo.saved[13].mb.Name, "SPAM")
+	is.Equal(mbRepo.saved[1].mb.Name, "SHOPPING")
+	is.Equal(mbRepo.saved[2].mb.Name, "SPAM")
+	is.Equal(mbRepo.saved[3].mb.Name, "WORK")
 
 	is = is.New(t)
 	is.Equal(len(msgRepo.saved), 4)
