@@ -2,7 +2,6 @@ package mail
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"sort"
 	"strings"
@@ -195,11 +194,8 @@ func TestRegisterAccountSuccessAgainstRealKVSInstance(t *testing.T) {
 
 	for _, mbox := range mboxes {
 		msgs, err := msgRepo.FetchByOwner(mbox.UUID)
-		//is.Equal(len(msgs), len(mconn.mailboxes[mbox.Name]))
 		is.NoErr(err)
-		for _, msg := range msgs {
-			fmt.Printf("MBOX: %s, HAS MSG: %s\n", mbox.Name, msg.UUID)
-		}
+		is.Equal(len(msgs), len(mconn.mailboxes[mbox.Name]))
 	}
 }
 
