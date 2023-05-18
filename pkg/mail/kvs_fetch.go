@@ -5,10 +5,12 @@ import (
 	"github.com/tauraamui/maildew/internal/kvs"
 )
 
-func fetchByOwner[E Account | Mailbox | Message](db kvs.DB, tableName string, owner kvs.UUID) ([]E, error) {
-	entries := make([]E, 1)
+func fetchByOwner[E any](db kvs.DB, tableName string, owner kvs.UUID) ([]E, error) {
+	dest := []E{}
 
-	blankEntries := kvs.ConvertToBlankEntriesWithUUID(tableName, owner, 0, entries[0])
+	typeRef := new(E)
+
+	blankEntries := kvs.ConvertToBlankEntriesWithUUID(tableName, owner, 0, typeRef)
 	for _, ent := range blankEntries {
 		// iterate over all stored values for this entry
 		prefix := ent.PrefixKey()
@@ -18,8 +20,8 @@ func fetchByOwner[E Account | Mailbox | Message](db kvs.DB, tableName string, ow
 
 			var rows uint32 = 0
 			for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
-				if rows >= uint32(len(entries)) {
-					entries = append(entries, *new(E))
+				if len(dest) == 0 || rows >= uint32(len(dest)) {
+					dest = append(dest, *new(E))
 				}
 				item := it.Item()
 				ent.RowID = rows
@@ -30,7 +32,7 @@ func fetchByOwner[E Account | Mailbox | Message](db kvs.DB, tableName string, ow
 					return err
 				}
 
-				if err := kvs.LoadEntry(&entries[rows], ent); err != nil {
+				if err := kvs.LoadEntry(&dest[rows], ent); err != nil {
 					return err
 				}
 				rows++
@@ -38,5 +40,5 @@ func fetchByOwner[E Account | Mailbox | Message](db kvs.DB, tableName string, ow
 			return nil
 		})
 	}
-	return entries, nil
+	return dest, nil
 }

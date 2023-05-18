@@ -36,6 +36,7 @@ func TestFetchByOwner(t *testing.T) {
 	fetchedMboxes, err := mbRepo.FetchByOwner(accWithMboxes.UUID)
 	is.NoErr(err)
 	is.Equal(len(fetchedMboxes), mbcount)
+	is.Equal(fetchedMboxes[mbcount-1].Name, "INBOX9")
 
 	fetchedMboxes, err = mbRepo.FetchByOwner(accWithoutMboxes.UUID)
 	is.NoErr(err)
