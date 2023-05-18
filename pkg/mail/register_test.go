@@ -2,6 +2,7 @@ package mail
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"sort"
 	"strings"
@@ -113,6 +114,10 @@ func (mmsgr *mockMessageRepo) Save(owner kvs.UUID, msg Message) error {
 	return mmsgr.err
 }
 
+func (mmsgr *mockMessageRepo) FetchByOwner(owner kvs.UUID) ([]Message, error) {
+	return nil, nil
+}
+
 func (mmsgr *mockMessageRepo) DumpTo(w io.Writer) error {
 	return mmsgr.err
 }
@@ -187,6 +192,15 @@ func TestRegisterAccountSuccessAgainstRealKVSInstance(t *testing.T) {
 	is.NoErr(err)
 
 	is.Equal(len(mboxes), len(mconn.mailboxes))
+
+	for _, mbox := range mboxes {
+		msgs, err := msgRepo.FetchByOwner(mbox.UUID)
+		//is.Equal(len(msgs), len(mconn.mailboxes[mbox.Name]))
+		is.NoErr(err)
+		for _, msg := range msgs {
+			fmt.Printf("MBOX: %s, HAS MSG: %s\n", mbox.Name, msg.UUID)
+		}
+	}
 }
 
 func TestRegisterAccountSuccessSyncedRemoteMailboxes(t *testing.T) {

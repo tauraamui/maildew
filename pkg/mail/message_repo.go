@@ -1,6 +1,8 @@
 package mail
 
 import (
+	"io"
+
 	"github.com/dgraph-io/badger/v3"
 	"github.com/tauraamui/maildew/internal/kvs"
 )
@@ -10,7 +12,9 @@ const (
 )
 
 type MessageRepo interface {
+	DumpTo(w io.Writer) error
 	Save(owner kvs.UUID, msg Message) error
+	FetchByOwner(owner kvs.UUID) ([]Message, error)
 	Close() error
 }
 
@@ -23,6 +27,10 @@ type messageRepo struct {
 	seq *badger.Sequence
 }
 
+func (r messageRepo) DumpTo(w io.Writer) error {
+	return r.DB.DumpTo(w)
+}
+
 func (r messageRepo) Save(owner kvs.UUID, msg Message) error {
 	rowID, err := r.nextRowID()
 	if err != nil {
@@ -30,6 +38,10 @@ func (r messageRepo) Save(owner kvs.UUID, msg Message) error {
 	}
 
 	return saveValueWithUUID(r.DB, r.tableName(), owner, rowID, msg)
+}
+
+func (r messageRepo) FetchByOwner(owner kvs.UUID) ([]Message, error) {
+	return fetchByOwner[Message](r.DB, r.tableName(), owner)
 }
 
 func (r messageRepo) tableName() string {
