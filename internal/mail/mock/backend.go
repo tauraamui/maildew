@@ -19,7 +19,6 @@ func (be *Backend) RegisterUser(username, password string) {
 		be.users = map[string]*user{}
 	}
 	be.users[username] = &user{username: username, password: password}
-	fmt.Printf("mock users: %v\n", be.users[username])
 }
 
 func (be *Backend) Login(_ *imap.ConnInfo, username, password string) (backend.User, error) {
@@ -65,7 +64,6 @@ func (bk *xbackend) RegisterUser(username, password string) {
 		bk.users = map[string]*user{}
 	}
 	bk.users[username] = &user{username: username, password: password, mailboxes: map[string]*mailbox{}}
-	fmt.Printf("mock users: %v\n", bk.users[username])
 }
 
 func (bk *xbackend) CreateMailbox(username, mbname string) error {

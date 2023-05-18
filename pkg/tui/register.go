@@ -107,7 +107,6 @@ func (m registerAccountModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.errDialog != nil {
 			return m, m.errDialog.Update(msg)
 		}
-		m.log.Debug().Msg("key update from registration model")
 		switch msg.String() {
 		case "ctrl+c", "esc":
 			return m, tea.Quit
