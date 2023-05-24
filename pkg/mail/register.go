@@ -122,12 +122,12 @@ func persistAccount(ar AccountRepo, acc *Account) error {
 }
 
 // FIX:(tauraamui)
-// this function has a reading bug, in that it seems as though the channel is only
-// read from once it's finished being filled to capicity.
+// This function has a reading bug, in that it seems as though the channel is only
+// read from once it's finished being filled to capacity, and it is never filled beyond that.
 func persistMailboxes(conn RemoteConnection, mbRepo MailboxRepo, msgRepo MessageRepo, acc Account) error {
 	done := make(chan error, 1)
 	defer close(done)
-	mailboxes := make(chan *imap.MailboxInfo, 30)
+	mailboxes := make(chan *imap.MailboxInfo, 10)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
