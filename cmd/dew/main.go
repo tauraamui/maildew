@@ -32,7 +32,7 @@ func main() {
 
 	backend := mock.New()
 	backend.RegisterUser("username", "password")
-	for i := 0; i < 11; i++ {
+	for i := 0; i < 20; i++ {
 		backend.CreateMailbox("username", fmt.Sprintf("INBOX%d", i+1))
 	}
 

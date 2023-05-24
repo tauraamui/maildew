@@ -296,12 +296,12 @@ func TestRegisterAccountErrorDuringStoringMailboxes(t *testing.T) {
 	}
 	msgRepo := mockMessageRepo{}
 
-	is := is.NewRelaxed(t)
+	is := is.New(t)
 
 	err := RegisterAccount(log, "", accRepo, &mbRepo, &msgRepo, &Account{Username: "test@place.com", Password: "efewfweoifjio"})
+	is.True(err != nil)
 	is.Equal(err.Error(), "failed to persist mailbox")
 
-	is = is.New(t)
 	is.Equal(len(mbRepo.saved), 1)
 
 	is.Equal(mbRepo.saved[0].mb.Name, "DRAFTS")

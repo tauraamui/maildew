@@ -3,7 +3,6 @@ package mail
 import (
 	"fmt"
 	"strings"
-	"sync"
 
 	"github.com/emersion/go-imap"
 	imapclient "github.com/emersion/go-imap/client"
@@ -125,31 +124,54 @@ func persistAccount(ar AccountRepo, acc *Account) error {
 // This function has a reading bug, in that it seems as though the channel is only
 // read from once it's finished being filled to capacity, and it is never filled beyond that.
 func persistMailboxes(conn RemoteConnection, mbRepo MailboxRepo, msgRepo MessageRepo, acc Account) error {
+	mailboxes := make(chan *imap.MailboxInfo, 10)
 	done := make(chan error, 1)
 	defer close(done)
-	mailboxes := make(chan *imap.MailboxInfo, 10)
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
 	go func() {
-		defer wg.Done()
 		done <- conn.List("", "*", mailboxes)
 	}()
 
 	for mb := range mailboxes {
+		fmt.Println("* " + mb.Name)
 		err := persistMailbox(conn, mbRepo, msgRepo, acc.UUID, Mailbox{Name: mb.Name})
 		if err != nil {
 			return err
 		}
 	}
 
-	wg.Wait()
-
 	if err := <-done; err != nil {
 		return err
 	}
 
 	return nil
+	/*
+		done := make(chan error, 1)
+		defer close(done)
+		mailboxes := make(chan *imap.MailboxInfo, 10)
+
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			done <- conn.List("", "*", mailboxes)
+		}()
+
+		for mb := range mailboxes {
+			err := persistMailbox(conn, mbRepo, msgRepo, acc.UUID, Mailbox{Name: mb.Name})
+			if err != nil {
+				return err
+			}
+		}
+
+		wg.Wait()
+
+		if err := <-done; err != nil {
+			return err
+		}
+
+		return nil
+	*/
 }
 
 func persistMailbox(conn RemoteConnection, mbRepo MailboxRepo, msgRepo MessageRepo, owner kvs.UUID, mb Mailbox) error {
@@ -158,24 +180,26 @@ func persistMailbox(conn RemoteConnection, mbRepo MailboxRepo, msgRepo MessageRe
 		return err
 	}
 
-	done := make(chan error)
-	defer close(done)
-	messages := make(chan *imap.Message)
+	/*
+		done := make(chan error)
+		defer close(done)
+		messages := make(chan *imap.Message)
 
-	go fetchMailboxMessages(conn, mb.Name, messages, done)
+		go fetchMailboxMessages(conn, mb.Name, messages, done)
 
-	for msg := range messages {
-		_, err := storeMessage(msgRepo, mb.UUID, Message{
-			RemoteUID: msg.Uid,
-		})
-		if err != nil {
+		for msg := range messages {
+			_, err := storeMessage(msgRepo, mb.UUID, Message{
+				RemoteUID: msg.Uid,
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		if err := <-done; err != nil {
 			return err
 		}
-	}
-
-	if err := <-done; err != nil {
-		return err
-	}
+	*/
 
 	return nil
 }
