@@ -191,20 +191,13 @@ func TestRegisterAccountSuccessAgainstRealKVSInstance(t *testing.T) {
 
 	accRepo := NewAccountRepo(db)
 	mbRepo := NewMailboxRepo(db)
-	msgRepo := NewMessageRepo(db)
 
 	acc := Account{Username: "test@place.com", Password: "efewfweoifjio"}
-	is.NoErr(RegisterAccount(log, "", accRepo, mbRepo, msgRepo, &acc))
+	is.NoErr(RegisterAccount(log, "", accRepo, mbRepo, &acc))
 	mboxes, err := mbRepo.FetchByOwner(acc.UUID)
 	is.NoErr(err)
 
 	is.Equal(len(mboxes), len(mconn.mailboxes))
-
-	for _, mbox := range mboxes {
-		msgs, err := msgRepo.FetchByOwner(mbox.UUID)
-		is.NoErr(err)
-		is.Equal(len(msgs), len(mconn.mailboxes[mbox.Name]))
-	}
 }
 
 func TestRegisterAccountSuccessSyncedRemoteMailboxes(t *testing.T) {
@@ -220,11 +213,10 @@ func TestRegisterAccountSuccessSyncedRemoteMailboxes(t *testing.T) {
 
 	accRepo := mockAccountRepo{}
 	mbRepo := mockMailboxRepo{}
-	msgRepo := mockMessageRepo{}
 
 	is := is.New(t)
 
-	is.NoErr(RegisterAccount(log, "", accRepo, &mbRepo, &msgRepo, &Account{Username: "test@place.com", Password: "efewfweoifjio"}))
+	is.NoErr(RegisterAccount(log, "", accRepo, &mbRepo, &Account{Username: "test@place.com", Password: "efewfweoifjio"}))
 
 	is.Equal(len(mbRepo.saved), 12)
 	is = is.NewRelaxed(t)
@@ -239,14 +231,6 @@ func TestRegisterAccountSuccessSyncedRemoteMailboxes(t *testing.T) {
 	is.Equal(mbRepo.saved[9].mb.Name, "SHOPPING")
 	is.Equal(mbRepo.saved[10].mb.Name, "SPAM")
 	is.Equal(mbRepo.saved[11].mb.Name, "WORK")
-
-	is = is.New(t)
-	is.Equal(len(msgRepo.saved), 4)
-	is = is.NewRelaxed(t)
-	is.Equal(msgRepo.saved[0].RemoteUID, uint32(321))
-	is.Equal(msgRepo.saved[1].RemoteUID, uint32(5940))
-	is.Equal(msgRepo.saved[2].RemoteUID, uint32(623943))
-	is.Equal(msgRepo.saved[3].RemoteUID, uint32(65096))
 }
 
 func TestRegisterAccountErrorDuringListingMailboxes(t *testing.T) {
@@ -265,11 +249,10 @@ func TestRegisterAccountErrorDuringListingMailboxes(t *testing.T) {
 
 	accRepo := mockAccountRepo{}
 	mbRepo := mockMailboxRepo{}
-	msgRepo := mockMessageRepo{}
 
 	is := is.NewRelaxed(t)
 
-	err := RegisterAccount(log, "", accRepo, &mbRepo, &msgRepo, &Account{Username: "test@place.com", Password: "efewfweoifjio"})
+	err := RegisterAccount(log, "", accRepo, &mbRepo, &Account{Username: "test@place.com", Password: "efewfweoifjio"})
 	is.Equal(err.Error(), "failed to acquire next mailbox")
 
 	is = is.New(t)
@@ -294,11 +277,10 @@ func TestRegisterAccountErrorDuringStoringMailboxes(t *testing.T) {
 		returnErrAfterNumSaved: 1,
 		err:                    errors.New("failed to persist mailbox"),
 	}
-	msgRepo := mockMessageRepo{}
 
 	is := is.New(t)
 
-	err := RegisterAccount(log, "", accRepo, &mbRepo, &msgRepo, &Account{Username: "test@place.com", Password: "efewfweoifjio"})
+	err := RegisterAccount(log, "", accRepo, &mbRepo, &Account{Username: "test@place.com", Password: "efewfweoifjio"})
 	is.True(err != nil)
 	is.Equal(err.Error(), "failed to persist mailbox")
 

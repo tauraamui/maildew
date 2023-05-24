@@ -42,9 +42,8 @@ func TestPrintOutMailboxes(t *testing.T) {
 	}
 
 	mbRepo := NewMailboxRepo(db)
-	msgRepo := NewMessageRepo(db)
 
-	persistMailboxes(cc, mbRepo, msgRepo, acc)
+	persistMailboxes(cc, mbRepo, acc)
 }
 
 func setupListener() (net.Listener, error) {

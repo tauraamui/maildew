@@ -70,7 +70,7 @@ type returnToParentMsg struct {
 func registerAccountCmd(l logging.I, imapAddr string, u, p string, r Repositories) func() tea.Msg {
 	return func() tea.Msg {
 		acc := mail.Account{Username: u, Password: p}
-		if err := mail.RegisterAccount(l, imapAddr, r.AccountRepo, r.MailboxRepo, r.MessageRepo, &acc); err != nil {
+		if err := mail.RegisterAccount(l, imapAddr, r.AccountRepo, r.MailboxRepo, &acc); err != nil {
 			return errorMessageMsg{err}
 		}
 		return returnToParentMsg{acc}

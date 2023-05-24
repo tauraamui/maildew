@@ -74,7 +74,6 @@ func RegisterAccount(
 	addr string,
 	accRepo AccountRepo,
 	mbRepo MailboxRepo,
-	msgRepo MessageRepo,
 	acc *Account,
 ) error {
 
@@ -99,7 +98,7 @@ func RegisterAccount(
 	log.Debug().Msg("logged into account")
 
 	log.Debug().Msg("syncing mailboxes")
-	if err := syncAccountMailboxes(cc, mbRepo, msgRepo, *acc); err != nil {
+	if err := syncAccountMailboxes(cc, mbRepo, *acc); err != nil {
 		return err
 	}
 	log.Debug().Msg("synced mailboxes")
@@ -107,8 +106,8 @@ func RegisterAccount(
 	return nil
 }
 
-func syncAccountMailboxes(conn RemoteConnection, mbRepo MailboxRepo, msgRepo MessageRepo, acc Account) error {
-	if err := persistMailboxes(conn, mbRepo, msgRepo, acc); err != nil {
+func syncAccountMailboxes(conn RemoteConnection, mbRepo MailboxRepo, acc Account) error {
+	if err := persistMailboxes(conn, mbRepo, acc); err != nil {
 		return err
 	}
 
@@ -120,10 +119,7 @@ func persistAccount(ar AccountRepo, acc *Account) error {
 	return ar.Save(*acc)
 }
 
-// FIX:(tauraamui)
-// This function has a reading bug, in that it seems as though the channel is only
-// read from once it's finished being filled to capacity, and it is never filled beyond that.
-func persistMailboxes(conn RemoteConnection, mbRepo MailboxRepo, msgRepo MessageRepo, acc Account) error {
+func persistMailboxes(conn RemoteConnection, mbRepo MailboxRepo, acc Account) error {
 	mailboxes := make(chan *imap.MailboxInfo, 10)
 	done := make(chan error, 1)
 	defer close(done)
@@ -133,8 +129,7 @@ func persistMailboxes(conn RemoteConnection, mbRepo MailboxRepo, msgRepo Message
 	}()
 
 	for mb := range mailboxes {
-		fmt.Println("* " + mb.Name)
-		err := persistMailbox(conn, mbRepo, msgRepo, acc.UUID, Mailbox{Name: mb.Name})
+		err := persistMailbox(conn, mbRepo, acc.UUID, Mailbox{Name: mb.Name})
 		if err != nil {
 			return err
 		}
@@ -145,61 +140,13 @@ func persistMailboxes(conn RemoteConnection, mbRepo MailboxRepo, msgRepo Message
 	}
 
 	return nil
-	/*
-		done := make(chan error, 1)
-		defer close(done)
-		mailboxes := make(chan *imap.MailboxInfo, 10)
-
-		wg := sync.WaitGroup{}
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			done <- conn.List("", "*", mailboxes)
-		}()
-
-		for mb := range mailboxes {
-			err := persistMailbox(conn, mbRepo, msgRepo, acc.UUID, Mailbox{Name: mb.Name})
-			if err != nil {
-				return err
-			}
-		}
-
-		wg.Wait()
-
-		if err := <-done; err != nil {
-			return err
-		}
-
-		return nil
-	*/
 }
 
-func persistMailbox(conn RemoteConnection, mbRepo MailboxRepo, msgRepo MessageRepo, owner kvs.UUID, mb Mailbox) error {
+func persistMailbox(conn RemoteConnection, mbRepo MailboxRepo, owner kvs.UUID, mb Mailbox) error {
 	mb.UUID = uuid.New()
 	if err := mbRepo.Save(owner, mb); err != nil {
 		return err
 	}
-
-	/*
-		done := make(chan error)
-		defer close(done)
-		messages := make(chan *imap.Message)
-
-		go fetchMailboxMessages(conn, mb.Name, messages, done)
-
-		for msg := range messages {
-			_, err := storeMessage(msgRepo, mb.UUID, Message{
-				RemoteUID: msg.Uid,
-			})
-			if err != nil {
-				return err
-			}
-		}
-
-		if err := <-done; err != nil {
-			return err
-		}
-	*/
 
 	return nil
 }
