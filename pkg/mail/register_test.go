@@ -162,6 +162,14 @@ func makeRemoteConnectionData() map[string][]*imap.Message {
 		"WORK":     {},
 		"SHOPPING": {},
 		"SPAM":     {},
+		"DRAFTS":   {},
+		"OTHER":    {},
+		"MISC":     {},
+		"SCHOOL":   {},
+		"LIBRARY":  {},
+		"MISC2":    {},
+		"MISC3":    {},
+		"MISC4":    {},
 	}
 }
 
@@ -218,12 +226,19 @@ func TestRegisterAccountSuccessSyncedRemoteMailboxes(t *testing.T) {
 
 	is.NoErr(RegisterAccount(log, "", accRepo, &mbRepo, &msgRepo, &Account{Username: "test@place.com", Password: "efewfweoifjio"}))
 
-	is.Equal(len(mbRepo.saved), 4)
+	is.Equal(len(mbRepo.saved), 12)
 	is = is.NewRelaxed(t)
-	is.Equal(mbRepo.saved[0].mb.Name, "INBOX")
-	is.Equal(mbRepo.saved[1].mb.Name, "SHOPPING")
-	is.Equal(mbRepo.saved[2].mb.Name, "SPAM")
-	is.Equal(mbRepo.saved[3].mb.Name, "WORK")
+	is.Equal(mbRepo.saved[0].mb.Name, "DRAFTS")
+	is.Equal(mbRepo.saved[1].mb.Name, "INBOX")
+	is.Equal(mbRepo.saved[2].mb.Name, "LIBRARY")
+	is.Equal(mbRepo.saved[4].mb.Name, "MISC2")
+	is.Equal(mbRepo.saved[5].mb.Name, "MISC3")
+	is.Equal(mbRepo.saved[6].mb.Name, "MISC4")
+	is.Equal(mbRepo.saved[7].mb.Name, "OTHER")
+	is.Equal(mbRepo.saved[8].mb.Name, "SCHOOL")
+	is.Equal(mbRepo.saved[9].mb.Name, "SHOPPING")
+	is.Equal(mbRepo.saved[10].mb.Name, "SPAM")
+	is.Equal(mbRepo.saved[11].mb.Name, "WORK")
 
 	is = is.New(t)
 	is.Equal(len(msgRepo.saved), 4)
@@ -259,7 +274,7 @@ func TestRegisterAccountErrorDuringListingMailboxes(t *testing.T) {
 
 	is = is.New(t)
 	is.Equal(len(mbRepo.saved), 1)
-	is.Equal(mbRepo.saved[0].mb.Name, "INBOX")
+	is.Equal(mbRepo.saved[0].mb.Name, "DRAFTS")
 }
 
 func TestRegisterAccountErrorDuringStoringMailboxes(t *testing.T) {
@@ -289,5 +304,5 @@ func TestRegisterAccountErrorDuringStoringMailboxes(t *testing.T) {
 	is = is.New(t)
 	is.Equal(len(mbRepo.saved), 1)
 
-	is.Equal(mbRepo.saved[0].mb.Name, "INBOX")
+	is.Equal(mbRepo.saved[0].mb.Name, "DRAFTS")
 }
