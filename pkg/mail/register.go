@@ -75,7 +75,7 @@ func RegisterAccount(
 	accRepo AccountRepo,
 	mbRepo MailboxRepo,
 	acc *Account,
-) error {
+) (RemoteConnection, error) {
 
 	useSSL := false
 	if len(addr) == 0 {
@@ -86,24 +86,24 @@ func RegisterAccount(
 	log.Debug().Msgf("resolved addr to %s", addr)
 
 	if err := persistAccount(accRepo, acc); err != nil {
-		return err
+		return nil, err
 	}
 
 	log.Debug().Msg("attempting to login to account")
 	cc, err := acquireClientConn(addr, *acc, useSSL)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer cc.Close()
 	log.Debug().Msg("logged into account")
 
 	log.Debug().Msg("syncing mailboxes")
 	if err := syncAccountMailboxes(cc, mbRepo, *acc); err != nil {
-		return err
+		return nil, err
 	}
 	log.Debug().Msg("synced mailboxes")
 
-	return nil
+	return cc, nil
 }
 
 func syncAccountMailboxes(conn RemoteConnection, mbRepo MailboxRepo, acc Account) error {

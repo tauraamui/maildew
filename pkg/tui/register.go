@@ -64,16 +64,18 @@ type errorMessageMsg struct {
 }
 
 type returnToParentMsg struct {
+	cc  mail.RemoteConnection
 	acc mail.Account
 }
 
 func registerAccountCmd(l logging.I, imapAddr string, u, p string, r Repositories) func() tea.Msg {
 	return func() tea.Msg {
 		acc := mail.Account{Username: u, Password: p}
-		if err := mail.RegisterAccount(l, imapAddr, r.AccountRepo, r.MailboxRepo, &acc); err != nil {
+		cc, err := mail.RegisterAccount(l, imapAddr, r.AccountRepo, r.MailboxRepo, &acc)
+		if err != nil {
 			return errorMessageMsg{err}
 		}
-		return returnToParentMsg{acc}
+		return returnToParentMsg{cc, acc}
 	}
 }
 
