@@ -32,8 +32,8 @@ type Account struct {
 }
 
 type Mailbox struct {
-	UUID kvs.UUID
-	Name string
+	UUID kvs.UUID // our local unique identifier
+	Name string   // the local visual rep and remote identifier
 }
 
 type Message struct {
