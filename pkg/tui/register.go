@@ -71,7 +71,7 @@ type returnToParentMsg struct {
 func registerAccountCmd(l logging.I, imapAddr string, u, p string, r Repositories) func() tea.Msg {
 	return func() tea.Msg {
 		acc := mail.Account{Username: u, Password: p}
-		cc, err := mail.RegisterAccount(l, imapAddr, r.AccountRepo, r.MailboxRepo, &acc)
+		cc, err := mail.RegisterAccount(l, imapAddr, r.AccountRepo, r.MailboxRepo, &acc, mail.ResolveClientConnector(imapAddr, acc))
 		if err != nil {
 			return errorMessageMsg{err}
 		}

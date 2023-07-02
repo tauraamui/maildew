@@ -49,24 +49,28 @@ func resolveAddressFromUsername(username string) string {
 	return ""
 }
 
-var acquireClientConn = func(addr string, acc Account, useSSL bool) (RemoteConnection, error) {
-	var cc *imapclient.Client
-	var err error
+type ClientConnector func(useSSL bool) (RemoteConnection, error)
 
-	if useSSL {
-		cc, err = imapclient.DialTLS(addr, nil)
-	} else {
-		cc, err = imapclient.Dial(addr)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to dial to address %s: %w", addr, err)
-	}
+func ResolveClientConnector(addr string, acc Account) ClientConnector {
+	return func(useSSL bool) (RemoteConnection, error) {
+		var cc *imapclient.Client
+		var err error
 
-	if err := cc.Login(acc.Username, acc.Password); err != nil {
-		return nil, fmt.Errorf("failed to login to account: %w", err)
-	}
+		if useSSL {
+			cc, err = imapclient.DialTLS(addr, nil)
+		} else {
+			cc, err = imapclient.Dial(addr)
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to dial to address %s: %w", addr, err)
+		}
 
-	return cc, nil
+		if err := cc.Login(acc.Username, acc.Password); err != nil {
+			return nil, fmt.Errorf("failed to login to account: %w", err)
+		}
+
+		return cc, nil
+	}
 }
 
 func RegisterAccount(
@@ -75,6 +79,7 @@ func RegisterAccount(
 	accRepo AccountRepo,
 	mbRepo MailboxRepo,
 	acc *Account,
+	connect ClientConnector,
 ) (RemoteConnection, error) {
 
 	useSSL := false
@@ -90,7 +95,7 @@ func RegisterAccount(
 	}
 
 	log.Debug().Msg("attempting to login to account")
-	cc, err := acquireClientConn(addr, *acc, useSSL)
+	cc, err := connect(useSSL)
 	if err != nil {
 		return nil, err
 	}

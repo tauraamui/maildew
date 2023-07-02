@@ -30,7 +30,9 @@ func TestPrintOutMailboxes(t *testing.T) {
 	}
 
 	acc := Account{Username: "username", Password: "password"}
-	cc, err := acquireClientConn(l.Addr().String(), acc, false)
+	connector := ResolveClientConnector(l.Addr().String(), acc)
+
+	cc, err := connector(false)
 	if err != nil {
 		t.Fatal(err)
 	}
