@@ -1,4 +1,4 @@
-package mail
+package mail_test
 
 import (
 	"errors"
@@ -11,6 +11,7 @@ import (
 	"github.com/matryer/is"
 	"github.com/tauraamui/maildew/internal/kvs"
 	"github.com/tauraamui/maildew/pkg/logging"
+	"github.com/tauraamui/maildew/pkg/mail"
 )
 
 type mockRemoteConnection struct {
@@ -60,7 +61,7 @@ func (mc mockRemoteConnection) Close() error { return nil }
 
 type mockAccountRepo struct{}
 
-func (mar mockAccountRepo) Save(user Account) error {
+func (mar mockAccountRepo) Save(user mail.Account) error {
 	return nil
 }
 
@@ -79,10 +80,10 @@ type mockMailboxRepo struct {
 
 type savedMailbox struct {
 	owner kvs.UUID
-	mb    Mailbox
+	mb    mail.Mailbox
 }
 
-func (mmr *mockMailboxRepo) Save(owner kvs.UUID, mailbox Mailbox) error {
+func (mmr *mockMailboxRepo) Save(owner kvs.UUID, mailbox mail.Mailbox) error {
 	defer func() { mmr.savedNum++ }()
 	if mmr.returnErrAfterNumSaved > 0 && mmr.savedNum >= mmr.returnErrAfterNumSaved {
 		return mmr.err
@@ -91,7 +92,7 @@ func (mmr *mockMailboxRepo) Save(owner kvs.UUID, mailbox Mailbox) error {
 	return mmr.err
 }
 
-func (mmr *mockMailboxRepo) FetchByOwner(owner kvs.UUID) ([]Mailbox, error) {
+func (mmr *mockMailboxRepo) FetchByOwner(owner kvs.UUID) ([]mail.Mailbox, error) {
 	return nil, nil
 }
 
@@ -102,18 +103,18 @@ func (mmr *mockMailboxRepo) DumpTo(w io.Writer) error {
 func (mmr mockMailboxRepo) Close() {}
 
 type mockMessageRepo struct {
-	saved    []Message
+	saved    []mail.Message
 	savedNum int
 	err      error
 }
 
-func (mmsgr *mockMessageRepo) Save(owner kvs.UUID, msg Message) error {
+func (mmsgr *mockMessageRepo) Save(owner kvs.UUID, msg mail.Message) error {
 	defer func() { mmsgr.savedNum++ }()
 	mmsgr.saved = append(mmsgr.saved, msg)
 	return mmsgr.err
 }
 
-func (mmsgr *mockMessageRepo) FetchByOwner(owner kvs.UUID) ([]Message, error) {
+func (mmsgr *mockMessageRepo) FetchByOwner(owner kvs.UUID) ([]mail.Message, error) {
 	return nil, nil
 }
 
@@ -174,18 +175,18 @@ func TestRegisterAccountSuccessAgainstRealKVSInstance(t *testing.T) {
 		mailboxes: makeRemoteConnectionData(),
 	}
 
-	connector := func(useSSL bool) (RemoteConnection, error) {
+	connector := func(useSSL bool) (mail.RemoteConnection, error) {
 		return mconn, nil
 	}
 
 	db, err := kvs.NewMemDB()
 	is.NoErr(err)
 
-	accRepo := NewAccountRepo(db)
-	mbRepo := NewMailboxRepo(db)
+	accRepo := mail.NewAccountRepo(db)
+	mbRepo := mail.NewMailboxRepo(db)
 
-	acc := Account{Username: "test@place.com", Password: "efewfweoifjio"}
-	cc, err := RegisterAccount(log, "", accRepo, mbRepo, &acc, connector)
+	acc := mail.Account{Username: "test@place.com", Password: "efewfweoifjio"}
+	cc, err := mail.RegisterAccount(log, "", accRepo, mbRepo, &acc, connector)
 	is.NoErr(err)
 	is.True(cc != nil)
 	mboxes, err := mbRepo.FetchByOwner(acc.UUID)
@@ -201,7 +202,7 @@ func TestRegisterAccountSuccessSyncedRemoteMailboxes(t *testing.T) {
 		mailboxes: makeRemoteConnectionData(),
 	}
 
-	connector := func(useSSL bool) (RemoteConnection, error) {
+	connector := func(useSSL bool) (mail.RemoteConnection, error) {
 		return mconn, nil
 	}
 
@@ -210,7 +211,7 @@ func TestRegisterAccountSuccessSyncedRemoteMailboxes(t *testing.T) {
 
 	is := is.New(t)
 
-	cc, err := RegisterAccount(log, "", accRepo, &mbRepo, &Account{Username: "test@place.com", Password: "efewfweoifjio"}, connector)
+	cc, err := mail.RegisterAccount(log, "", accRepo, &mbRepo, &mail.Account{Username: "test@place.com", Password: "efewfweoifjio"}, connector)
 	is.NoErr(err)
 	is.True(cc != nil)
 
@@ -239,7 +240,7 @@ func TestRegisterAccountErrorDuringListingMailboxes(t *testing.T) {
 		err:               errors.New("failed to acquire next mailbox"),
 	}
 
-	connector := func(useSSL bool) (RemoteConnection, error) {
+	connector := func(useSSL bool) (mail.RemoteConnection, error) {
 		return mconn, nil
 	}
 
@@ -248,7 +249,7 @@ func TestRegisterAccountErrorDuringListingMailboxes(t *testing.T) {
 
 	is := is.NewRelaxed(t)
 
-	cc, err := RegisterAccount(log, "", accRepo, &mbRepo, &Account{Username: "test@place.com", Password: "efewfweoifjio"}, connector)
+	cc, err := mail.RegisterAccount(log, "", accRepo, &mbRepo, &mail.Account{Username: "test@place.com", Password: "efewfweoifjio"}, connector)
 	is.True(err != nil)
 	is.Equal(err.Error(), "failed to acquire next mailbox")
 	is.True(cc == nil)
@@ -266,7 +267,7 @@ func TestRegisterAccountErrorDuringStoringMailboxes(t *testing.T) {
 		mailboxes: makeRemoteConnectionData(),
 	}
 
-	connector := func(useSSL bool) (RemoteConnection, error) {
+	connector := func(useSSL bool) (mail.RemoteConnection, error) {
 		return mconn, nil
 	}
 
@@ -278,7 +279,7 @@ func TestRegisterAccountErrorDuringStoringMailboxes(t *testing.T) {
 
 	is := is.New(t)
 
-	cc, err := RegisterAccount(log, "", accRepo, &mbRepo, &Account{Username: "test@place.com", Password: "efewfweoifjio"}, connector)
+	cc, err := mail.RegisterAccount(log, "", accRepo, &mbRepo, &mail.Account{Username: "test@place.com", Password: "efewfweoifjio"}, connector)
 	is.True(err != nil)
 	is.Equal(err.Error(), "failed to persist mailbox")
 	is.True(cc == nil)
