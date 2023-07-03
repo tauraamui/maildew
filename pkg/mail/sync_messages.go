@@ -28,38 +28,25 @@ func forEachMessage(conn RemoteConnection, mailboxName string, callback func(nam
 		return err
 	}
 
-	msgsc := make(chan *imap.Message, 1)
-	errc := make(chan error, 1)
-	// NOTE:(tauraamui) the implementation of fetch already closes our receiver channel on completion
+	msgc := make(chan *imap.Message, 1)
+	errc := make(chan error)
+	defer close(errc)
 	go func() {
-		errc <- conn.Fetch(buildSequence(mb.Messages), []imap.FetchItem{imap.FetchEnvelope}, msgsc)
+		errc <- conn.Fetch(buildSequence(mb.Messages), []imap.FetchItem{imap.FetchEnvelope}, msgc)
 	}()
 
-	for {
-		select {
-		case err := <-errc:
-			if err != nil {
-				return err
-			}
-		case msg, more := <-msgsc:
-			if msg == nil {
-				continue
-			}
+	// if an error is encountered, msgc should be closed automatically
+	for msg := range msgc {
+		if msg == nil || msg.Envelope == nil {
+			continue
+		}
 
-			envelope := msg.Envelope
-			if envelope == nil {
-				continue
-			}
-
-			if err := callback(envelope.Subject); err != nil {
-				return err
-			}
-
-			if !more {
-				return nil
-			}
+		if err := callback(msg.Envelope.Subject); err != nil {
+			return err
 		}
 	}
+
+	return <-errc
 }
 
 func buildSequence(msgs uint32) *imap.SeqSet {

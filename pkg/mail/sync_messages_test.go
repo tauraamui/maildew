@@ -1,6 +1,7 @@
 package mail
 
 import (
+	"errors"
 	"sort"
 	"testing"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/matryer/is"
 )
 
-func TestForEachMessage(t *testing.T) {
+func TestForEachMessageWithFetchingSuccessful(t *testing.T) {
 	is := is.New(t)
 
 	mconn := &mockRemoteConnection{
@@ -25,9 +26,37 @@ func TestForEachMessage(t *testing.T) {
 		return nil
 	}))
 
+	is = is.NewRelaxed(t)
 	is.True(contains(fetchedSubjects, "Cats & Dogs"))
 	is.True(contains(fetchedSubjects, "Re: neighbour noise complaint"))
 	is.True(contains(fetchedSubjects, "Library - Book Overdue!"))
+}
+
+func TestForEachMessageWithFetchingEncountersAnImmediateErrorOnStart(t *testing.T) {
+	is := is.New(t)
+
+	mconn := &mockRemoteConnection{
+		mailboxes: makeRemoteConnectionData(map[uint32]string{
+			3353: "Cats & Dogs",
+			5393: "Re: neighbour noise complaint",
+			3283: "Library - Book Overdue!",
+		}),
+		fetch: func(mc mockRemoteConnection, seqset *imap.SeqSet, items []imap.FetchItem, ch chan *imap.Message) error {
+			defer close(ch)
+			return errors.New("failed to initialise fetching process")
+		},
+	}
+
+	fetchedSubjects := []string{}
+	err := forEachMessage(mconn, "INBOX", func(name string) error {
+		fetchedSubjects = append(fetchedSubjects, name)
+		return nil
+	})
+	is.True(err != nil)
+	is.Equal(err.Error(), "failed to initialise fetching process")
+
+	is = is.NewRelaxed(t)
+	is.Equal(len(fetchedSubjects), 0)
 }
 
 func contains(s []string, str string) bool {
