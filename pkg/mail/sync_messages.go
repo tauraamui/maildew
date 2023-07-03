@@ -28,7 +28,7 @@ func forEachMessage(conn RemoteConnection, mailboxName string, callback func(nam
 		return err
 	}
 
-	msgc := make(chan *imap.Message, 1)
+	msgc := make(chan *imap.Message)
 	errc := make(chan error)
 	defer close(errc)
 	go func() {
