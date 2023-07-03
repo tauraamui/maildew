@@ -74,7 +74,7 @@ func TestForEachMessageWithFetchingEncountersAnErrorDuringProcess(t *testing.T) 
 			msgs := mc.mailboxes[mc.selected]
 			ch <- msgs[0]
 			ch <- msgs[1]
-			return errors.New("failed to initialise fetching process")
+			return errors.New("failed during fetching process")
 		},
 	}
 
@@ -84,7 +84,7 @@ func TestForEachMessageWithFetchingEncountersAnErrorDuringProcess(t *testing.T) 
 		return nil
 	})
 	is.True(err != nil)
-	is.Equal(err.Error(), "failed to initialise fetching process")
+	is.Equal(err.Error(), "failed during fetching process")
 
 	is = is.NewRelaxed(t)
 	is.Equal(len(fetchedSubjects), 2)
