@@ -14,6 +14,7 @@ func TestForEachMessage(t *testing.T) {
 	mconn := &mockRemoteConnection{
 		mailboxes: makeRemoteConnectionData(map[uint32]string{
 			3353: "Cats & Dogs",
+			5393: "Re: neighbour noise complaint",
 		}),
 	}
 
@@ -23,7 +24,10 @@ func TestForEachMessage(t *testing.T) {
 		return nil
 	}))
 
-	is.Equal(fetchedSubjects, []string{"Cats & Dogs"})
+	is.Equal(fetchedSubjects, []string{
+		"Cats & Dogs",
+		"Re: neighbour noise complaint",
+	})
 }
 
 type mockRemoteConnection struct {
