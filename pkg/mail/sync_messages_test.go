@@ -41,11 +41,14 @@ func contains(s []string, str string) bool {
 }
 
 type mockRemoteConnection struct {
+	fetch             fetchFunc
 	selected          string
 	mailboxes         map[string][]*imap.Message
 	returnErrAfterNum int
 	err               error
 }
+
+type fetchFunc func(mc mockRemoteConnection, seqset *imap.SeqSet, items []imap.FetchItem, ch chan *imap.Message) error
 
 func sortedKeys(m map[string][]*imap.Message) []string {
 	var keys []string
@@ -75,12 +78,19 @@ func (mc *mockRemoteConnection) Select(name string, readOnly bool) (*imap.Mailbo
 	}, nil
 }
 
-func (mc mockRemoteConnection) Fetch(seqset *imap.SeqSet, items []imap.FetchItem, ch chan *imap.Message) error {
+func defaultMockFetchFunc(mc mockRemoteConnection, seqset *imap.SeqSet, items []imap.FetchItem, ch chan *imap.Message) error {
 	defer close(ch)
 	for _, msg := range mc.mailboxes[mc.selected] {
 		ch <- msg
 	}
 	return nil
+}
+
+func (mc mockRemoteConnection) Fetch(seqset *imap.SeqSet, items []imap.FetchItem, ch chan *imap.Message) error {
+	if mc.fetch == nil {
+		mc.fetch = defaultMockFetchFunc
+	}
+	return mc.fetch(mc, seqset, items, ch)
 }
 
 func (mc mockRemoteConnection) Close() error { return nil }
