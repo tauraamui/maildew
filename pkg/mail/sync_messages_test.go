@@ -59,6 +59,48 @@ func TestForEachMessageWithFetchingEncountersAnImmediateErrorOnStart(t *testing.
 	is.Equal(len(fetchedSubjects), 0)
 }
 
+func TestForEachMessageWithFetchingEncountersAnErrorDuringProcess(t *testing.T) {
+	is := is.New(t)
+
+	mconn := &mockRemoteConnection{
+		mailboxes: makeRemoteConnectionData(map[uint32]string{
+			3353: "Cats & Dogs",
+			5393: "Re: neighbour noise complaint",
+			3283: "Library - Book Overdue!",
+		}),
+		fetch: func(mc mockRemoteConnection, seqset *imap.SeqSet, items []imap.FetchItem, ch chan *imap.Message) error {
+			defer close(ch)
+
+			msgs := mc.mailboxes[mc.selected]
+			ch <- msgs[0]
+			ch <- msgs[1]
+			return errors.New("failed to initialise fetching process")
+		},
+	}
+
+	fetchedSubjects := []string{}
+	err := forEachMessage(mconn, "INBOX", func(name string) error {
+		fetchedSubjects = append(fetchedSubjects, name)
+		return nil
+	})
+	is.True(err != nil)
+	is.Equal(err.Error(), "failed to initialise fetching process")
+
+	is = is.NewRelaxed(t)
+	is.Equal(len(fetchedSubjects), 2)
+
+	if doesNotContain(fetchedSubjects, "Library - Book Overdue!") {
+		is.True(contains(fetchedSubjects, "Cats & Dogs"))
+		is.True(contains(fetchedSubjects, "Re: neighbour noise complaint"))
+	} else if doesNotContain(fetchedSubjects, "Cats & Dogs") {
+		is.True(contains(fetchedSubjects, "Library - Book Overdue!"))
+		is.True(contains(fetchedSubjects, "Re: neighbour noise complaint"))
+	} else if doesNotContain(fetchedSubjects, "Re: neighbour noise complaint") {
+		is.True(contains(fetchedSubjects, "Cats & Dogs"))
+		is.True(contains(fetchedSubjects, "Library - Book Overdue!"))
+	}
+}
+
 func contains(s []string, str string) bool {
 	for _, v := range s {
 		if v == str {
@@ -67,6 +109,10 @@ func contains(s []string, str string) bool {
 	}
 
 	return false
+}
+
+func doesNotContain(s []string, str string) bool {
+	return !contains(s, str)
 }
 
 type mockRemoteConnection struct {
