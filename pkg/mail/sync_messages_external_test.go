@@ -12,13 +12,18 @@ func TestForEachMessage(t *testing.T) {
 	is := is.New(t)
 
 	mconn := &mockRemoteConnection{
-		mailboxes: makeRemoteConnectionData(),
+		mailboxes: makeRemoteConnectionData(map[uint32]string{
+			3353: "Cats & Dogs",
+		}),
 	}
 
+	fetchedSubjects := []string{}
 	is.NoErr(forEachMessage(mconn, "INBOX", func(name string) error {
+		fetchedSubjects = append(fetchedSubjects, name)
 		return nil
 	}))
 
+	is.Equal(fetchedSubjects, []string{"Cats & Dogs"})
 }
 
 type mockRemoteConnection struct {
@@ -57,43 +62,18 @@ func (mc *mockRemoteConnection) Select(name string, readOnly bool) (*imap.Mailbo
 }
 
 func (mc mockRemoteConnection) Fetch(seqset *imap.SeqSet, items []imap.FetchItem, ch chan *imap.Message) error {
+	defer close(ch)
 	for _, msg := range mc.mailboxes[mc.selected] {
 		ch <- msg
 	}
-	close(ch)
 	return nil
 }
 
 func (mc mockRemoteConnection) Close() error { return nil }
 
-func makeRemoteConnectionData() map[string][]*imap.Message {
-	return map[string][]*imap.Message{
-		"INBOX": {
-			{
-				Uid: 321,
-				Envelope: &imap.Envelope{
-					Subject: "Test inbox message",
-				},
-			},
-			{
-				Uid: 5940,
-				Envelope: &imap.Envelope{
-					Subject: "Car insurance ad",
-				},
-			},
-			{
-				Uid: 623943,
-				Envelope: &imap.Envelope{
-					Subject: "Order is 15 days late",
-				},
-			},
-			{
-				Uid: 65096,
-				Envelope: &imap.Envelope{
-					Subject: "Feel happy!",
-				},
-			},
-		},
+func makeRemoteConnectionData(inboxMessages map[uint32]string) map[string][]*imap.Message {
+	mailboxesAndMessages := map[string][]*imap.Message{
+		"INBOX":    {},
 		"WORK":     {},
 		"SHOPPING": {},
 		"SPAM":     {},
@@ -106,4 +86,13 @@ func makeRemoteConnectionData() map[string][]*imap.Message {
 		"MISC3":    {},
 		"MISC4":    {},
 	}
+
+	for uuid, name := range inboxMessages {
+		mailboxesAndMessages["INBOX"] = append(mailboxesAndMessages["INBOX"], &imap.Message{
+			Uid:      uuid,
+			Envelope: &imap.Envelope{Subject: name},
+		})
+	}
+
+	return mailboxesAndMessages
 }
