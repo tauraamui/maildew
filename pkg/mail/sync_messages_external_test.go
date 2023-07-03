@@ -15,6 +15,7 @@ func TestForEachMessage(t *testing.T) {
 		mailboxes: makeRemoteConnectionData(map[uint32]string{
 			3353: "Cats & Dogs",
 			5393: "Re: neighbour noise complaint",
+			3283: "Library - Book Overdue!",
 		}),
 	}
 
@@ -24,10 +25,19 @@ func TestForEachMessage(t *testing.T) {
 		return nil
 	}))
 
-	is.Equal(fetchedSubjects, []string{
-		"Cats & Dogs",
-		"Re: neighbour noise complaint",
-	})
+	is.True(contains(fetchedSubjects, "Cats & Dogs"))
+	is.True(contains(fetchedSubjects, "Re: neighbour noise complaint"))
+	is.True(contains(fetchedSubjects, "Library - Book Overdue!"))
+}
+
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
 }
 
 type mockRemoteConnection struct {
