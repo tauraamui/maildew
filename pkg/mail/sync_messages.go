@@ -11,10 +11,6 @@ func SyncMessages(
 	msgr MessageRepo,
 	mb Mailbox,
 ) error {
-	return syncMailboxMessages(conn, msgr, mb)
-}
-
-func syncMailboxMessages(conn RemoteConnection, msgr MessageRepo, mb Mailbox) error {
 	if err := forEachMessage(conn, mb.Name, func(name string) error {
 		if err := msgr.Save(mb.UUID, Message{}); err != nil {
 			return err
@@ -46,7 +42,16 @@ func forEachMessage(conn RemoteConnection, mailboxName string, callback func(nam
 				return err
 			}
 		case msg, more := <-msgsc:
-			if err := callback(msg.Envelope.Subject); err != nil {
+			if msg == nil {
+				continue
+			}
+
+			envelope := msg.Envelope
+			if envelope == nil {
+				continue
+			}
+
+			if err := callback(envelope.Subject); err != nil {
 				return err
 			}
 
